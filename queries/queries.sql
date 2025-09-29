@@ -1,3 +1,4 @@
+-- harry and thomas
 -- 1. count of orders grouped by week
 SELECT orderWeek, COUNT(*) FROM orders GROUP BY orderWeek;
 
