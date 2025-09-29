@@ -1,4 +1,5 @@
 -- MenuItems Table - Nitin Achuta
+-- Holds the individual drinks 
 CREATE TABLE MenuItems (
     menuItemID INT PRIMARY KEY,
     drinkCategory VARCHAR(50),

@@ -1,4 +1,5 @@
 -- Orders Table - Nitin Achuta
+-- Holds all the information about each order
 CREATE TABLE Orders (
     orderID INT PRIMARY KEY,
     timeOfOrder TIMESTAMP NOT NULL,
