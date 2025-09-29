@@ -1,4 +1,3 @@
--- harry and thomas
 -- 1. count of orders grouped by week
 SELECT orderWeek, COUNT(*) FROM orders GROUP BY orderWeek;
 
@@ -19,7 +18,7 @@ GROUP BY order_date
 ORDER BY order_date
 LIMIT 10;
 
---4. Menu Item Inventory
+--4. Menu Item Inventory (WIP)
 
 
 --5. Best of the Worst
