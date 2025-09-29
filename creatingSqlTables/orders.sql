@@ -1,7 +1,7 @@
 -- Orders Table - Nitin Achuta
 CREATE TABLE Orders (
     orderID INT PRIMARY KEY,
-    timeOfOrder DATETIME NOT NULL,
+    timeOfOrder TIMESTAMP NOT NULL,
     customerID INT,
     employeeID INT,
     totalCost DECIMAL(8,2) NOT NULL,
