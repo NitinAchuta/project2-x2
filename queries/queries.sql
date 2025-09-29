@@ -18,7 +18,7 @@ GROUP BY order_date
 ORDER BY order_date
 LIMIT 10;
 
---4. Menu Item Inventory
+--4. Menu Item Inventory (WIP)
 
 
 --5. Best of the Worst
