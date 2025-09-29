@@ -1,7 +1,7 @@
-CREATE TABLE IF NOT EXISTS payments (
-    paymentID int PRIMARY KEY,
-    order_id int REFERENCES orders(order_id),
-    paymentMethod varchar(255),
-    amount decimal,
-    status varchar(255)
+CREATE TABLE Payments (
+    paymentID INT PRIMARY KEY,
+    orderID INT,
+    paymentMethod VARCHAR(50),
+    status VARCHAR(50),
+    FOREIGN KEY (orderID) REFERENCES Orders(orderID)
 );
