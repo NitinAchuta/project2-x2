@@ -19,6 +19,7 @@ ORDER BY order_date
 LIMIT 10;
 
 --4. Menu Item Inventory (WIP)
-
-
---5. Best of the Worst
+SELECT mi.menuitemid, menuitemname, COUNT(*)
+FROM MenuItemIngredients m
+INNER JOIN MenuItems mi ON m.menuitemid = mi.menuitemid
+GROUP BY mi.menuitemid;
