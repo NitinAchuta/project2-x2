@@ -15,7 +15,7 @@ SELECT
     SUM(totalcost) AS total
 FROM orders 
 GROUP BY order_date
-ORDER BY order_date
+ORDER BY total DESC
 LIMIT 10;
 
 --4. Menu Item Inventory (WIP)
