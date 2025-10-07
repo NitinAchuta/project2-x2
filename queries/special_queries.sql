@@ -4,7 +4,8 @@ SELECT orderWeek, COUNT(*) FROM orders GROUP BY orderWeek;
 -- 2. count of orders grouped by hour
 SELECT
   EXTRACT(HOUR FROM "timeoforder") AS hour_of_day,
-  COUNT(*)
+  COUNT(*) AS orders,
+  SUM(totalcost) AS cost
 FROM orders
 GROUP BY hour_of_day
 ORDER BY hour_of_day;
@@ -18,7 +19,7 @@ GROUP BY order_date
 ORDER BY total DESC
 LIMIT 10;
 
---4. Menu Item Inventory (WIP)
+--4. Menu Item Inventory 
 SELECT mi.menuitemid, menuitemname, COUNT(*)
 FROM MenuItemIngredients m
 INNER JOIN MenuItems mi ON m.menuitemid = mi.menuitemid
