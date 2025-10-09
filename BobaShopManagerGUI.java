@@ -1,9 +1,19 @@
 import java.sql.*;
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class BobaShopManagerGUI extends JFrame {
+    // Database connection details
+    private static final Map<String, String> env = loadEnvFile(".env");
+    private static final String DB_URL = env.get("DB_URL");
+    private static final String DB_USER = env.get("DB_USER");
+    private static final String DB_PASS = env.get("DB_PASS");
+
     private Connection conn = null;
     private JTextArea displayArea;
     private JTextArea inventoryDisplayArea;
@@ -53,8 +63,7 @@ public class BobaShopManagerGUI extends JFrame {
             dbSetup my = new dbSetup();
             Class.forName("org.postgresql.Driver");
             conn = DriverManager.getConnection(
-                "jdbc:postgresql://csce-315-db.engr.tamu.edu/gang_x2_db",
-                my.user, my.pswd);
+                DB_URL, DB_USER, DB_PASS);
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, 
                 "Database connection failed: " + e.getMessage(),
@@ -860,6 +869,21 @@ public class BobaShopManagerGUI extends JFrame {
             employeeDisplayArea.append("\nERROR: " + e.getMessage() + "\n");
             e.printStackTrace();
         }
+    }
+
+    private static Map<String, String> loadEnvFile(String filePath) {
+        Map<String, String> env = new HashMap<>();
+        try {
+            Files.lines(Paths.get(filePath))
+                    .filter(line -> line.contains("=") && !line.startsWith("#"))
+                    .forEach(line -> {
+                        String[] parts = line.split("=", 2);
+                        env.put(parts[0].trim(), parts[1].trim());
+                    });
+        } catch (Exception e) {
+            System.err.println("Failed to load .env file: " + e.getMessage());
+        }
+        return env;
     }
 
     
