@@ -2,12 +2,15 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class CashierApp {
@@ -235,16 +238,25 @@ public class CashierApp {
 
     private static Map<String, String> loadEnvFile(String filePath) {
         Map<String, String> env = new HashMap<>();
-        try {
-            Files.lines(Paths.get(filePath))
-                    .filter(line -> line.contains("=") && !line.startsWith("#"))
-                    .forEach(line -> {
-                        String[] parts = line.split("=", 2);
-                        env.put(parts[0].trim(), parts[1].trim());
-                    });
-        } catch (Exception e) {
-            System.err.println("Failed to load .env file: " + e.getMessage());
+
+        Path path = Paths.get(filePath);
+        if (!Files.exists(path)) {
+            System.err.println("Environment file not found: " + filePath);
+            return env;
         }
+
+        try (Stream<String> lines = Files.lines(path)) {
+            lines.map(String::trim)
+                .filter(line -> !line.isEmpty() && !line.startsWith("#") && line.contains("="))
+                .forEach(line -> {
+                    String[] parts = line.split("=", 2);
+                    env.put(parts[0].trim(), parts[1].trim());
+                });
+        } catch (IOException e) {
+            System.err.println("Error reading environment file: " + e.getMessage());
+        }
+
         return env;
     }
+
 }
