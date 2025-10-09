@@ -1,161 +1,133 @@
-import javafx.application.Application;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.Scene;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
-import javafx.stage.Stage;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.stream.Stream;
-import java.util.HashMap;
-import java.util.Map;
 
-public class CashierApp extends Application {
+public class CashierApp {
 
     // Database connection details
-    private static final String DB_URL = System.getenv("DB_URL");
-    private static final String DB_USER = System.getenv("DB_USER");
-    private static final String DB_PASS = System.getenv("DB_PASS");
+    private static final Map<String, String> env = loadEnvFile(".env");
+    private static final String DB_URL = env.get("DB_URL");
+    private static final String DB_USER = env.get("DB_USER");
+    private static final String DB_PASS = env.get("DB_PASS");
 
     // UI Components
-    private ListView<String> menuListView;
-    private ListView<String> orderListView;
-    private Label totalLabel;
-    private TextField customerNameField;
-    private ComboBox<Integer> quantityBox;
+    private JList<String> menuList;
+    private DefaultListModel<String> orderListModel;
+    private JLabel totalLabel;
+    private JTextField customerNameField;
+    private JComboBox<Integer> quantityBox;
 
     // Data
     private List<MenuItem> menuItems = new ArrayList<>();
     private List<OrderItem> currentOrder = new ArrayList<>();
     private double totalCost = 0.0;
 
-    @Override
-    public void start(Stage primaryStage) {
-        try {
-            primaryStage.setTitle("Cashier - Order System");
+    public CashierApp() {
+        loadMenuItems();
+        createAndShowGUI();
+    }
 
-            // Load menu items from database
-            loadMenuItems();
+    private void createAndShowGUI() {
+        JFrame frame = new JFrame("Cashier - Order System");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(900, 500);
 
-            // Create UI
-            BorderPane root = new BorderPane();
-            root.setPadding(new Insets(10));
+        // Left Panel: Menu Items
+        JPanel leftPanel = new JPanel();
+        leftPanel.setLayout(new BorderLayout());
+        JLabel menuLabel = new JLabel("Menu Items", JLabel.CENTER);
+        menuList = new JList<>(menuItems.stream().map(item -> item.name + " - $" + item.price).toArray(String[]::new));
+        JScrollPane menuScrollPane = new JScrollPane(menuList);
+        JButton addButton = new JButton("Add to Order");
+        addButton.addActionListener(_ -> addToOrder());
+        leftPanel.add(menuLabel, BorderLayout.NORTH);
+        leftPanel.add(menuScrollPane, BorderLayout.CENTER);
+        leftPanel.add(addButton, BorderLayout.SOUTH);
 
-            // Left: Menu Items
-            VBox leftPanel = new VBox(10);
-            leftPanel.setPadding(new Insets(10));
-            Label menuLabel = new Label("Menu Items");
-            menuLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
-            menuListView = new ListView<>();
-            menuListView.setPrefHeight(400);
-            for (MenuItem item : menuItems) {
-                menuListView.getItems().add(item.name + " - $" + item.price);
-            }
-            Button addButton = new Button("Add to Order");
-            addButton.setOnAction(e -> addToOrder());
-            leftPanel.getChildren().addAll(menuLabel, menuListView, addButton);
+        // Center Panel: Current Order
+        JPanel centerPanel = new JPanel();
+        centerPanel.setLayout(new BorderLayout());
+        JLabel orderLabel = new JLabel("Current Order", JLabel.CENTER);
+        orderListModel = new DefaultListModel<>();
+        JList<String> orderList = new JList<>(orderListModel);
+        JScrollPane orderScrollPane = new JScrollPane(orderList);
+        totalLabel = new JLabel("Total: $0.00", JLabel.RIGHT);
+        JPanel buttonPanel = new JPanel();
+        JButton clearButton = new JButton("Clear Order");
+        clearButton.addActionListener(_ -> clearOrder());
+        JButton submitButton = new JButton("Submit Order");
+        submitButton.addActionListener(_ -> submitOrder());
+        buttonPanel.add(clearButton);
+        buttonPanel.add(submitButton);
+        centerPanel.add(orderLabel, BorderLayout.NORTH);
+        centerPanel.add(orderScrollPane, BorderLayout.CENTER);
+        centerPanel.add(totalLabel, BorderLayout.SOUTH);
+        centerPanel.add(buttonPanel, BorderLayout.PAGE_END);
 
-            // Center: Current Order
-            VBox centerPanel = new VBox(10);
-            centerPanel.setPadding(new Insets(10));
-            Label orderLabel = new Label("Current Order");
-            orderLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
-
-            HBox customerBox = new HBox(10);
-            customerBox.getChildren().addAll(new Label("Customer:"), customerNameField = new TextField());
-            customerNameField.setPromptText("Optional");
-
-            orderListView = new ListView<>();
-            orderListView.setPrefHeight(300);
-
-            HBox totalBox = new HBox(10);
-            totalBox.setAlignment(Pos.CENTER_RIGHT);
-            totalLabel = new Label("Total: $0.00");
-            totalLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
-            totalBox.getChildren().add(totalLabel);
-
-            HBox buttonBox = new HBox(10);
-            buttonBox.setAlignment(Pos.CENTER);
-            Button clearButton = new Button("Clear Order");
-            clearButton.setOnAction(e -> clearOrder());
-            Button submitButton = new Button("Submit Order");
-            submitButton.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white;");
-            submitButton.setOnAction(e -> submitOrder());
-            buttonBox.getChildren().addAll(clearButton, submitButton);
-
-            centerPanel.getChildren().addAll(orderLabel, customerBox, orderListView, totalBox, buttonBox);
-
-            // Right: Customization (simple quantity selector)
-            VBox rightPanel = new VBox(10);
-            rightPanel.setPadding(new Insets(10));
-            Label custLabel = new Label("Quantity");
-            custLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
-            quantityBox = new ComboBox<>();
-            for (int i = 1; i <= 10; i++) {
-                quantityBox.getItems().add(i);
-            }
-            quantityBox.setValue(1);
-            rightPanel.getChildren().addAll(custLabel, quantityBox);
-
-            // Layout
-            root.setLeft(leftPanel);
-            root.setCenter(centerPanel);
-            root.setRight(rightPanel);
-
-            Scene scene = new Scene(root, 900, 500);
-            primaryStage.setScene(scene);
-            primaryStage.show();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Startup Error");
-            alert.setHeaderText("Application failed to start");
-            alert.setContentText("Error: " + e.getMessage() + "\n\nCheck console for details.");
-            alert.showAndWait();
-            System.exit(1);
+        // Right Panel: Quantity and Customer Name
+        JPanel rightPanel = new JPanel();
+        rightPanel.setLayout(new GridLayout(0, 1));
+        JLabel quantityLabel = new JLabel("Quantity", JLabel.CENTER);
+        quantityBox = new JComboBox<>();
+        for (int i = 1; i <= 10; i++) {
+            quantityBox.addItem(i);
         }
+        JLabel customerLabel = new JLabel("Customer Name", JLabel.CENTER);
+        customerNameField = new JTextField();
+        rightPanel.add(quantityLabel);
+        rightPanel.add(quantityBox);
+        rightPanel.add(customerLabel);
+        rightPanel.add(customerNameField);
+
+        // Layout
+        frame.setLayout(new GridLayout(1, 3));
+        frame.add(leftPanel);
+        frame.add(centerPanel);
+        frame.add(rightPanel);
+
+        frame.setVisible(true);
     }
 
     private void loadMenuItems() {
-        System.out.println("Connecting to database...");
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
                 Statement stmt = conn.createStatement();
                 ResultSet rs = stmt
                         .executeQuery("SELECT menuitemid, menuitemname, price FROM menuitems ORDER BY menuitemid")) {
 
-            System.out.println("Database connected! Reading menu items...");
             while (rs.next()) {
                 menuItems.add(new MenuItem(
                         rs.getInt("menuitemid"),
                         rs.getString("menuitemname"),
                         rs.getDouble("price")));
             }
-            System.out.println("Loaded " + menuItems.size() + " menu items");
         } catch (SQLException e) {
-            showAlert("Database Error", "Failed to load menu items: " + e.getMessage());
-            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Failed to load menu items: " + e.getMessage(), "Database Error",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 
     private void addToOrder() {
-        int selectedIndex = menuListView.getSelectionModel().getSelectedIndex();
+        int selectedIndex = menuList.getSelectedIndex();
         if (selectedIndex < 0) {
-            showAlert("Error", "Please select a menu item");
+            JOptionPane.showMessageDialog(null, "Please select a menu item", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
         MenuItem item = menuItems.get(selectedIndex);
-        int quantity = quantityBox.getValue();
+        int quantity = (int) quantityBox.getSelectedItem();
 
         OrderItem orderItem = new OrderItem(item, quantity);
         currentOrder.add(orderItem);
 
-        orderListView.getItems().add(quantity + "x " + item.name + " - $" + (item.price * quantity));
+        orderListModel.addElement(quantity + "x " + item.name + " - $" + (item.price * quantity));
 
         totalCost += item.price * quantity;
         totalLabel.setText("Total: $" + String.format("%.2f", totalCost));
@@ -163,15 +135,15 @@ public class CashierApp extends Application {
 
     private void clearOrder() {
         currentOrder.clear();
-        orderListView.getItems().clear();
+        orderListModel.clear();
         totalCost = 0.0;
         totalLabel.setText("Total: $0.00");
-        customerNameField.clear();
+        customerNameField.setText("");
     }
 
     private void submitOrder() {
         if (currentOrder.isEmpty()) {
-            showAlert("Error", "Order is empty");
+            JOptionPane.showMessageDialog(null, "Order is empty", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -195,14 +167,7 @@ public class CashierApp extends Application {
 
             // Insert order items
             int orderItemID = getNextID(conn, "orderitems", "orderitemid");
-            String itemSQL = "INSERT INTO orderitems (orderitemid, orderid, menuitemid, sugarlevel, icelevel, milktype, "
-                    +
-                    "boba, lycheejelly, grassjelly, pudding, aloevera, redbean, coffeejelly, coconutjelly, " +
-                    "chiaseeds, taroballs, mangostars, rainbowjelly, crystalboba, cheesefoam, whippedcream, " +
-                    "oreocrumbs, carameldrizzle, matchafoam, strawberrypoppingboba, mangopoppingboba, " +
-                    "blueberrypoppingboba, passionfruitpoppingboba, chocolatechips, peanutcrumble, " +
-                    "marshmallows, cinnamondust, honey, mintleaves, quantity) " +
-                    "VALUES (?, ?, ?, 50, 2, 'Regular', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ?)";
+            String itemSQL = "INSERT INTO orderitems (orderitemid, orderid, menuitemid, quantity) VALUES (?, ?, ?, ?)";
 
             try (PreparedStatement pstmt = conn.prepareStatement(itemSQL)) {
                 for (OrderItem item : currentOrder) {
@@ -215,12 +180,13 @@ public class CashierApp extends Application {
             }
 
             conn.commit();
-            showAlert("Success", "Order #" + orderID + " submitted successfully!");
+            JOptionPane.showMessageDialog(null, "Order #" + orderID + " submitted successfully!", "Success",
+                    JOptionPane.INFORMATION_MESSAGE);
             clearOrder();
 
         } catch (SQLException e) {
-            showAlert("Database Error", "Failed to submit order: " + e.getMessage());
-            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Failed to submit order: " + e.getMessage(), "Database Error",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -240,24 +206,8 @@ public class CashierApp extends Application {
         return cal.get(java.util.Calendar.WEEK_OF_YEAR);
     }
 
-    private void showAlert(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
-    }
-
     public static void main(String[] args) {
-        System.out.println("Starting CashierApp...");
-        System.out.println("Database: " + DB_URL);
-        System.out.println("User: " + DB_USER);
-        try {
-            launch(args);
-        } catch (Exception e) {
-            System.err.println("ERROR launching app: " + e.getMessage());
-            e.printStackTrace();
-        }
+        SwingUtilities.invokeLater(CashierApp::new);
     }
 
     // Simple data classes
@@ -285,8 +235,9 @@ public class CashierApp extends Application {
 
     private static Map<String, String> loadEnvFile(String filePath) {
         Map<String, String> env = new HashMap<>();
-        try (Stream<String> lines = Files.lines(Paths.get(filePath))) {
-            lines.filter(line -> line.contains("=") && !line.startsWith("#"))
+        try {
+            Files.lines(Paths.get(filePath))
+                    .filter(line -> line.contains("=") && !line.startsWith("#"))
                     .forEach(line -> {
                         String[] parts = line.split("=", 2);
                         env.put(parts[0].trim(), parts[1].trim());
