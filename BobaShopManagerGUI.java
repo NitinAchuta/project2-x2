@@ -61,7 +61,6 @@ public class BobaShopManagerGUI extends JFrame {
     
     private void connectToDatabase() {
         try {
-            dbSetup my = new dbSetup();
             Class.forName("org.postgresql.Driver");
             conn = DriverManager.getConnection(
                 DB_URL, DB_USER, DB_PASS);
