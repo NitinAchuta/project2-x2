@@ -18,6 +18,7 @@ public class BobaShopManagerGUI extends JFrame {
     private JTextArea displayArea;
     private JTextArea inventoryDisplayArea;
     private JTextArea employeeDisplayArea;
+    private JTextArea reportsDisplayArea;
     
     public BobaShopManagerGUI() {
         setTitle("Boba Shop Manager System");
@@ -43,9 +44,9 @@ public class BobaShopManagerGUI extends JFrame {
         JPanel employeeManagementTab = createEmployeeManagementTab();
         tabbedPane.addTab("Employee Management", employeeManagementTab);
         
-        // Tab 4: Empty for now
-        JPanel tab4 = createEmptyTab("Tab 4");
-        tabbedPane.addTab("Tab 4", tab4);
+        // Tab 4: Reports
+        JPanel reportsTab = createReportsTab();
+        tabbedPane.addTab("Reports", reportsTab);
         
         add(tabbedPane, BorderLayout.CENTER);
         
@@ -146,6 +147,102 @@ public class BobaShopManagerGUI extends JFrame {
         employeeDisplayArea.append("=".repeat(60) + "\n\n");
         employeeDisplayArea.append("Employee Management\n");
         employeeDisplayArea.append("Use the buttons above to view, add, update, or manage employees.\n");
+        
+        return panel;
+    }
+    
+    private JPanel createReportsTab() {
+        JPanel panel = new JPanel(new BorderLayout());
+        
+        // Display area for reports
+        reportsDisplayArea = new JTextArea();
+        reportsDisplayArea.setEditable(false);
+        reportsDisplayArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        JScrollPane scrollPane = new JScrollPane(reportsDisplayArea);
+        panel.add(scrollPane, BorderLayout.CENTER);
+        
+        // Button panel with multiple rows
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new GridLayout(4, 3, 5, 5));
+        
+        // Sales Reports
+        JButton topSellingButton = new JButton("Top 5 Best Selling Drinks");
+        topSellingButton.addActionListener(e -> generateTopSellingReport());
+        buttonPanel.add(topSellingButton);
+        
+        JButton worstSellingButton = new JButton("5 Worst Selling Drinks");
+        worstSellingButton.addActionListener(e -> generateWorstSellingReport());
+        buttonPanel.add(worstSellingButton);
+        
+        JButton revenueTodayButton = new JButton("Today's Revenue");
+        revenueTodayButton.addActionListener(e -> generateRevenueTodayReport());
+        buttonPanel.add(revenueTodayButton);
+        
+        JButton totalRevenueButton = new JButton("Total Revenue (All Time)");
+        totalRevenueButton.addActionListener(e -> generateTotalRevenueReport());
+        buttonPanel.add(totalRevenueButton);
+        
+        JButton avgOrderCostButton = new JButton("Average Order Cost");
+        avgOrderCostButton.addActionListener(e -> generateAvgOrderCostReport());
+        buttonPanel.add(avgOrderCostButton);
+        
+        JButton ordersTodayButton = new JButton("Orders Today");
+        ordersTodayButton.addActionListener(e -> generateOrdersTodayReport());
+        buttonPanel.add(ordersTodayButton);
+        
+        // Customer Reports
+        JButton frequentCustomersButton = new JButton("Most Frequent Customers");
+        frequentCustomersButton.addActionListener(e -> generateFrequentCustomersReport());
+        buttonPanel.add(frequentCustomersButton);
+        
+        // Inventory Reports
+        JButton outOfStockButton = new JButton("Out of Stock Items");
+        outOfStockButton.addActionListener(e -> generateOutOfStockReport());
+        buttonPanel.add(outOfStockButton);
+        
+        // Preference Reports
+        JButton sugarLevelButton = new JButton("Sugar Level Popularity");
+        sugarLevelButton.addActionListener(e -> generateSugarLevelReport());
+        buttonPanel.add(sugarLevelButton);
+        
+        JButton iceLevelButton = new JButton("Ice Level Popularity");
+        iceLevelButton.addActionListener(e -> generateIceLevelReport());
+        buttonPanel.add(iceLevelButton);
+        
+        // Time-based Reports
+        JButton yearlyRevenueButton = new JButton("Yearly Revenue");
+        yearlyRevenueButton.addActionListener(e -> generateYearlyRevenueReport());
+        buttonPanel.add(yearlyRevenueButton);
+        
+        JButton ordersByHourButton = new JButton("Orders by Hour");
+        ordersByHourButton.addActionListener(e -> generateOrdersByHourReport());
+        buttonPanel.add(ordersByHourButton);
+        
+        JButton peakSalesButton = new JButton("Peak Sales Days");
+        peakSalesButton.addActionListener(e -> generatePeakSalesReport());
+        buttonPanel.add(peakSalesButton);
+        
+        JButton ordersByWeekButton = new JButton("Orders by Week");
+        ordersByWeekButton.addActionListener(e -> generateOrdersByWeekReport());
+        buttonPanel.add(ordersByWeekButton);
+        
+        JButton menuItemIngredientsButton = new JButton("Menu Item Ingredients");
+        menuItemIngredientsButton.addActionListener(e -> generateMenuItemIngredientsReport());
+        buttonPanel.add(menuItemIngredientsButton);
+        
+        // Export button
+        JButton exportButton = new JButton("Export Current Report");
+        exportButton.addActionListener(e -> exportCurrentReport());
+        buttonPanel.add(exportButton);
+        
+        panel.add(buttonPanel, BorderLayout.NORTH);
+        
+        // Show initial message
+        reportsDisplayArea.append("✓ Connected to database successfully\n");
+        reportsDisplayArea.append("=".repeat(60) + "\n\n");
+        reportsDisplayArea.append("REPORTS DASHBOARD\n");
+        reportsDisplayArea.append("Select a report from the buttons above to generate business insights.\n");
+        reportsDisplayArea.append("Use 'Export Current Report' to save the current report to a file.\n\n");
         
         return panel;
     }
@@ -868,6 +965,436 @@ public class BobaShopManagerGUI extends JFrame {
             employeeDisplayArea.setText("");
             employeeDisplayArea.append("\nERROR: " + e.getMessage() + "\n");
             e.printStackTrace();
+        }
+    }
+
+    // ==================== REPORT GENERATION METHODS ====================
+    
+    private void generateTopSellingReport() {
+        reportsDisplayArea.setText("");
+        try {
+            Statement stmt = conn.createStatement();
+            String sql = "SELECT MenuItems.menuItemName, SUM(OrderItems.quantity) AS total_qty " +
+                        "FROM OrderItems JOIN MenuItems ON OrderItems.menuItemID = MenuItems.menuItemID " +
+                        "GROUP BY MenuItems.menuItemName ORDER BY total_qty DESC LIMIT 5";
+            ResultSet rs = stmt.executeQuery(sql);
+            
+            reportsDisplayArea.append("TOP 5 BEST SELLING DRINKS\n");
+            reportsDisplayArea.append("=".repeat(50) + "\n");
+            reportsDisplayArea.append(String.format("%-30s %-15s\n", "Drink Name", "Total Quantity"));
+            reportsDisplayArea.append("-".repeat(50) + "\n");
+            
+            while (rs.next()) {
+                reportsDisplayArea.append(String.format("%-30s %-15d\n",
+                    rs.getString("menuItemName"),
+                    rs.getInt("total_qty")));
+            }
+            
+            rs.close();
+            stmt.close();
+        } catch (Exception e) {
+            reportsDisplayArea.append("\nERROR: " + e.getMessage() + "\n");
+            e.printStackTrace();
+        }
+    }
+    
+    private void generateWorstSellingReport() {
+        reportsDisplayArea.setText("");
+        try {
+            Statement stmt = conn.createStatement();
+            String sql = "SELECT MenuItems.menuItemName, SUM(OrderItems.quantity) AS total_qty " +
+                        "FROM OrderItems JOIN MenuItems ON OrderItems.menuItemID = MenuItems.menuItemID " +
+                        "GROUP BY MenuItems.menuItemName ORDER BY total_qty ASC LIMIT 5";
+            ResultSet rs = stmt.executeQuery(sql);
+            
+            reportsDisplayArea.append("5 WORST SELLING DRINKS\n");
+            reportsDisplayArea.append("=".repeat(50) + "\n");
+            reportsDisplayArea.append(String.format("%-30s %-15s\n", "Drink Name", "Total Quantity"));
+            reportsDisplayArea.append("-".repeat(50) + "\n");
+            
+            while (rs.next()) {
+                reportsDisplayArea.append(String.format("%-30s %-15d\n",
+                    rs.getString("menuItemName"),
+                    rs.getInt("total_qty")));
+            }
+            
+            rs.close();
+            stmt.close();
+        } catch (Exception e) {
+            reportsDisplayArea.append("\nERROR: " + e.getMessage() + "\n");
+            e.printStackTrace();
+        }
+    }
+    
+    private void generateRevenueTodayReport() {
+        reportsDisplayArea.setText("");
+        try {
+            Statement stmt = conn.createStatement();
+            String sql = "SELECT SUM(totalCost) AS revenue_today FROM Orders WHERE DATE(timeOfOrder) = CURRENT_DATE";
+            ResultSet rs = stmt.executeQuery(sql);
+            
+            reportsDisplayArea.append("TODAY'S REVENUE\n");
+            reportsDisplayArea.append("=".repeat(30) + "\n");
+            
+            if (rs.next()) {
+                double revenue = rs.getDouble("revenue_today");
+                reportsDisplayArea.append(String.format("Revenue Today: $%.2f\n", revenue));
+            } else {
+                reportsDisplayArea.append("No revenue data for today.\n");
+            }
+            
+            rs.close();
+            stmt.close();
+        } catch (Exception e) {
+            reportsDisplayArea.append("\nERROR: " + e.getMessage() + "\n");
+            e.printStackTrace();
+        }
+    }
+    
+    private void generateTotalRevenueReport() {
+        reportsDisplayArea.setText("");
+        try {
+            Statement stmt = conn.createStatement();
+            String sql = "SELECT SUM(totalCost) AS total_revenue FROM Orders";
+            ResultSet rs = stmt.executeQuery(sql);
+            
+            reportsDisplayArea.append("TOTAL REVENUE (ALL TIME)\n");
+            reportsDisplayArea.append("=".repeat(40) + "\n");
+            
+            if (rs.next()) {
+                double revenue = rs.getDouble("total_revenue");
+                reportsDisplayArea.append(String.format("Total Revenue: $%.2f\n", revenue));
+            } else {
+                reportsDisplayArea.append("No revenue data available.\n");
+            }
+            
+            rs.close();
+            stmt.close();
+        } catch (Exception e) {
+            reportsDisplayArea.append("\nERROR: " + e.getMessage() + "\n");
+            e.printStackTrace();
+        }
+    }
+    
+    private void generateAvgOrderCostReport() {
+        reportsDisplayArea.setText("");
+        try {
+            Statement stmt = conn.createStatement();
+            String sql = "SELECT AVG(Orders.totalCost) AS avg_order_cost FROM Orders";
+            ResultSet rs = stmt.executeQuery(sql);
+            
+            reportsDisplayArea.append("AVERAGE ORDER COST\n");
+            reportsDisplayArea.append("=".repeat(30) + "\n");
+            
+            if (rs.next()) {
+                double avgCost = rs.getDouble("avg_order_cost");
+                reportsDisplayArea.append(String.format("Average Order Cost: $%.2f\n", avgCost));
+            } else {
+                reportsDisplayArea.append("No order data available.\n");
+            }
+            
+            rs.close();
+            stmt.close();
+        } catch (Exception e) {
+            reportsDisplayArea.append("\nERROR: " + e.getMessage() + "\n");
+            e.printStackTrace();
+        }
+    }
+    
+    private void generateOrdersTodayReport() {
+        reportsDisplayArea.setText("");
+        try {
+            Statement stmt = conn.createStatement();
+            String sql = "SELECT COUNT(*) AS orders_today FROM Orders WHERE DATE(timeOfOrder) = CURRENT_DATE";
+            ResultSet rs = stmt.executeQuery(sql);
+            
+            reportsDisplayArea.append("ORDERS TODAY\n");
+            reportsDisplayArea.append("=".repeat(25) + "\n");
+            
+            if (rs.next()) {
+                int orders = rs.getInt("orders_today");
+                reportsDisplayArea.append(String.format("Orders Today: %d\n", orders));
+            } else {
+                reportsDisplayArea.append("No orders for today.\n");
+            }
+            
+            rs.close();
+            stmt.close();
+        } catch (Exception e) {
+            reportsDisplayArea.append("\nERROR: " + e.getMessage() + "\n");
+            e.printStackTrace();
+        }
+    }
+    
+    private void generateFrequentCustomersReport() {
+        reportsDisplayArea.setText("");
+        try {
+            Statement stmt = conn.createStatement();
+            String sql = "SELECT customerID, COUNT(*) AS order_count FROM Orders GROUP BY customerID ORDER BY order_count DESC LIMIT 5";
+            ResultSet rs = stmt.executeQuery(sql);
+            
+            reportsDisplayArea.append("5 MOST FREQUENT CUSTOMERS\n");
+            reportsDisplayArea.append("=".repeat(40) + "\n");
+            reportsDisplayArea.append(String.format("%-15s %-15s\n", "Customer ID", "Order Count"));
+            reportsDisplayArea.append("-".repeat(40) + "\n");
+            
+            while (rs.next()) {
+                reportsDisplayArea.append(String.format("%-15d %-15d\n",
+                    rs.getInt("customerID"),
+                    rs.getInt("order_count")));
+            }
+            
+            rs.close();
+            stmt.close();
+        } catch (Exception e) {
+            reportsDisplayArea.append("\nERROR: " + e.getMessage() + "\n");
+            e.printStackTrace();
+        }
+    }
+    
+    private void generateOutOfStockReport() {
+        reportsDisplayArea.setText("");
+        try {
+            Statement stmt = conn.createStatement();
+            String sql = "SELECT ingredientID, ingredientName, ingredientCount FROM Inventory WHERE ingredientCount = 0";
+            ResultSet rs = stmt.executeQuery(sql);
+            
+            reportsDisplayArea.append("OUT OF STOCK ITEMS\n");
+            reportsDisplayArea.append("=".repeat(40) + "\n");
+            reportsDisplayArea.append(String.format("%-15s %-25s %-10s\n", "Ingredient ID", "Ingredient Name", "Count"));
+            reportsDisplayArea.append("-".repeat(40) + "\n");
+            
+            boolean hasOutOfStock = false;
+            while (rs.next()) {
+                hasOutOfStock = true;
+                reportsDisplayArea.append(String.format("%-15d %-25s %-10d\n",
+                    rs.getInt("ingredientID"),
+                    rs.getString("ingredientName"),
+                    rs.getInt("ingredientCount")));
+            }
+            
+            if (!hasOutOfStock) {
+                reportsDisplayArea.append("All items are in stock! ✓\n");
+            }
+            
+            rs.close();
+            stmt.close();
+        } catch (Exception e) {
+            reportsDisplayArea.append("\nERROR: " + e.getMessage() + "\n");
+            e.printStackTrace();
+        }
+    }
+    
+    private void generateSugarLevelReport() {
+        reportsDisplayArea.setText("");
+        try {
+            Statement stmt = conn.createStatement();
+            String sql = "SELECT sugarLevel, SUM(quantity) AS drinks_count FROM OrderItems GROUP BY sugarLevel ORDER BY drinks_count DESC";
+            ResultSet rs = stmt.executeQuery(sql);
+            
+            reportsDisplayArea.append("SUGAR LEVEL POPULARITY\n");
+            reportsDisplayArea.append("=".repeat(35) + "\n");
+            reportsDisplayArea.append(String.format("%-15s %-15s\n", "Sugar Level", "Drinks Count"));
+            reportsDisplayArea.append("-".repeat(35) + "\n");
+            
+            while (rs.next()) {
+                reportsDisplayArea.append(String.format("%-15s %-15d\n",
+                    rs.getString("sugarLevel"),
+                    rs.getInt("drinks_count")));
+            }
+            
+            rs.close();
+            stmt.close();
+        } catch (Exception e) {
+            reportsDisplayArea.append("\nERROR: " + e.getMessage() + "\n");
+            e.printStackTrace();
+        }
+    }
+    
+    private void generateIceLevelReport() {
+        reportsDisplayArea.setText("");
+        try {
+            Statement stmt = conn.createStatement();
+            String sql = "SELECT iceLevel, SUM(quantity) AS drinks_count FROM OrderItems GROUP BY iceLevel ORDER BY drinks_count DESC";
+            ResultSet rs = stmt.executeQuery(sql);
+            
+            reportsDisplayArea.append("ICE LEVEL POPULARITY\n");
+            reportsDisplayArea.append("=".repeat(30) + "\n");
+            reportsDisplayArea.append(String.format("%-15s %-15s\n", "Ice Level", "Drinks Count"));
+            reportsDisplayArea.append("-".repeat(30) + "\n");
+            
+            while (rs.next()) {
+                reportsDisplayArea.append(String.format("%-15s %-15d\n",
+                    rs.getString("iceLevel"),
+                    rs.getInt("drinks_count")));
+            }
+            
+            rs.close();
+            stmt.close();
+        } catch (Exception e) {
+            reportsDisplayArea.append("\nERROR: " + e.getMessage() + "\n");
+            e.printStackTrace();
+        }
+    }
+    
+    private void generateYearlyRevenueReport() {
+        reportsDisplayArea.setText("");
+        try {
+            Statement stmt = conn.createStatement();
+            String sql = "SELECT EXTRACT(YEAR FROM timeOfOrder) AS year, SUM(totalCost) AS revenue FROM Orders GROUP BY year ORDER BY year";
+            ResultSet rs = stmt.executeQuery(sql);
+            
+            reportsDisplayArea.append("YEARLY REVENUE\n");
+            reportsDisplayArea.append("=".repeat(30) + "\n");
+            reportsDisplayArea.append(String.format("%-10s %-15s\n", "Year", "Revenue"));
+            reportsDisplayArea.append("-".repeat(30) + "\n");
+            
+            while (rs.next()) {
+                reportsDisplayArea.append(String.format("%-10.0f %-15.2f\n",
+                    rs.getDouble("year"),
+                    rs.getDouble("revenue")));
+            }
+            
+            rs.close();
+            stmt.close();
+        } catch (Exception e) {
+            reportsDisplayArea.append("\nERROR: " + e.getMessage() + "\n");
+            e.printStackTrace();
+        }
+    }
+    
+    private void generateOrdersByHourReport() {
+        reportsDisplayArea.setText("");
+        try {
+            Statement stmt = conn.createStatement();
+            String sql = "SELECT EXTRACT(HOUR FROM \"timeoforder\") AS hour_of_day, COUNT(*) AS orders, SUM(totalcost) AS cost " +
+                        "FROM orders GROUP BY hour_of_day ORDER BY hour_of_day";
+            ResultSet rs = stmt.executeQuery(sql);
+            
+            reportsDisplayArea.append("ORDERS BY HOUR OF DAY\n");
+            reportsDisplayArea.append("=".repeat(50) + "\n");
+            reportsDisplayArea.append(String.format("%-10s %-10s %-15s\n", "Hour", "Orders", "Total Cost"));
+            reportsDisplayArea.append("-".repeat(50) + "\n");
+            
+            while (rs.next()) {
+                reportsDisplayArea.append(String.format("%-10.0f %-10d %-15.2f\n",
+                    rs.getDouble("hour_of_day"),
+                    rs.getInt("orders"),
+                    rs.getDouble("cost")));
+            }
+            
+            rs.close();
+            stmt.close();
+        } catch (Exception e) {
+            reportsDisplayArea.append("\nERROR: " + e.getMessage() + "\n");
+            e.printStackTrace();
+        }
+    }
+    
+    private void generatePeakSalesReport() {
+        reportsDisplayArea.setText("");
+        try {
+            Statement stmt = conn.createStatement();
+            String sql = "SELECT \"timeoforder\"::date AS order_date, SUM(totalcost) AS total " +
+                        "FROM orders GROUP BY order_date ORDER BY total DESC LIMIT 10";
+            ResultSet rs = stmt.executeQuery(sql);
+            
+            reportsDisplayArea.append("TOP 10 PEAK SALES DAYS\n");
+            reportsDisplayArea.append("=".repeat(40) + "\n");
+            reportsDisplayArea.append(String.format("%-15s %-15s\n", "Date", "Total Sales"));
+            reportsDisplayArea.append("-".repeat(40) + "\n");
+            
+            while (rs.next()) {
+                reportsDisplayArea.append(String.format("%-15s %-15.2f\n",
+                    rs.getDate("order_date").toString(),
+                    rs.getDouble("total")));
+            }
+            
+            rs.close();
+            stmt.close();
+        } catch (Exception e) {
+            reportsDisplayArea.append("\nERROR: " + e.getMessage() + "\n");
+            e.printStackTrace();
+        }
+    }
+    
+    private void generateOrdersByWeekReport() {
+        reportsDisplayArea.setText("");
+        try {
+            Statement stmt = conn.createStatement();
+            String sql = "SELECT orderWeek, COUNT(*) FROM orders GROUP BY orderWeek";
+            ResultSet rs = stmt.executeQuery(sql);
+            
+            reportsDisplayArea.append("ORDERS BY WEEK\n");
+            reportsDisplayArea.append("=".repeat(30) + "\n");
+            reportsDisplayArea.append(String.format("%-15s %-10s\n", "Week", "Order Count"));
+            reportsDisplayArea.append("-".repeat(30) + "\n");
+            
+            while (rs.next()) {
+                reportsDisplayArea.append(String.format("%-15s %-10d\n",
+                    rs.getString("orderWeek"),
+                    rs.getInt("count")));
+            }
+            
+            rs.close();
+            stmt.close();
+        } catch (Exception e) {
+            reportsDisplayArea.append("\nERROR: " + e.getMessage() + "\n");
+            e.printStackTrace();
+        }
+    }
+    
+    private void generateMenuItemIngredientsReport() {
+        reportsDisplayArea.setText("");
+        try {
+            Statement stmt = conn.createStatement();
+            String sql = "SELECT mi.menuitemid, menuitemname, COUNT(*) FROM MenuItemIngredients m " +
+                        "INNER JOIN MenuItems mi ON m.menuitemid = mi.menuitemid GROUP BY mi.menuitemid";
+            ResultSet rs = stmt.executeQuery(sql);
+            
+            reportsDisplayArea.append("MENU ITEM INGREDIENTS COUNT\n");
+            reportsDisplayArea.append("=".repeat(50) + "\n");
+            reportsDisplayArea.append(String.format("%-10s %-25s %-10s\n", "Item ID", "Menu Item Name", "Ingredients"));
+            reportsDisplayArea.append("-".repeat(50) + "\n");
+            
+            while (rs.next()) {
+                reportsDisplayArea.append(String.format("%-10d %-25s %-10d\n",
+                    rs.getInt("menuitemid"),
+                    rs.getString("menuitemname"),
+                    rs.getInt("count")));
+            }
+            
+            rs.close();
+            stmt.close();
+        } catch (Exception e) {
+            reportsDisplayArea.append("\nERROR: " + e.getMessage() + "\n");
+            e.printStackTrace();
+        }
+    }
+    
+    private void exportCurrentReport() {
+        try {
+            String reportContent = reportsDisplayArea.getText();
+            if (reportContent.trim().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "No report to export. Generate a report first.", 
+                    "Export Error", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            
+            // Create filename with timestamp
+            java.time.LocalDateTime now = java.time.LocalDateTime.now();
+            String timestamp = now.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"));
+            String filename = "boba_shop_report_" + timestamp + ".txt";
+            
+            // Write to file
+            java.nio.file.Files.write(java.nio.file.Paths.get(filename), reportContent.getBytes());
+            
+            JOptionPane.showMessageDialog(this, "Report exported successfully to: " + filename, 
+                "Export Success", JOptionPane.INFORMATION_MESSAGE);
+                
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Failed to export report: " + e.getMessage(), 
+                "Export Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
