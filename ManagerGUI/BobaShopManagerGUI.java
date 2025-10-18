@@ -1,20 +1,9 @@
 import java.sql.*;
-import java.util.HashMap;
-import java.util.Map;
-
 import javax.swing.*;
 import java.awt.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
 public class BobaShopManagerGUI extends JFrame {
-    // Database connection details
-    private static final Map<String, String> env = loadEnvFile(".env");
-    private static final String DB_URL = env.get("DB_URL");
-    private static final String DB_USER = env.get("DB_USER");
-    private static final String DB_PASS = env.get("DB_PASS");
-
-    private Connection conn = null;
+    private DatabaseManager dbManager;
     private JTextArea displayArea;
     private JTextArea inventoryDisplayArea;
     private JTextArea employeeDisplayArea;
@@ -26,8 +15,15 @@ public class BobaShopManagerGUI extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        // Connect to database
-        connectToDatabase();
+        // Initialize database manager
+        try {
+            dbManager = new DatabaseManager();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,
+                    "Database connection failed: " + e.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            System.exit(0);
+        }
 
         // Create tabbed pane
         JTabbedPane tabbedPane = new JTabbedPane();
@@ -58,19 +54,13 @@ public class BobaShopManagerGUI extends JFrame {
 
         setVisible(true);
     }
-
-    private void connectToDatabase() {
-        try {
-            Class.forName("org.postgresql.Driver");
-            conn = DriverManager.getConnection(
-                    DB_URL, DB_USER, DB_PASS);
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this,
-                    "Database connection failed: " + e.getMessage(),
-                    "Error", JOptionPane.ERROR_MESSAGE);
-            System.exit(0);
+    
+    public void cleanup() {
+        if (dbManager != null) {
+            dbManager.closeConnection();
         }
     }
+
 
     private JPanel createMenuManagementTab() {
         JPanel panel = new JPanel(new BorderLayout());
@@ -299,7 +289,7 @@ public class BobaShopManagerGUI extends JFrame {
     private void viewMenuItems() {
         displayArea.setText("");
         try {
-            Statement stmt = conn.createStatement();
+            Statement stmt = dbManager.getConnection().createStatement();
             String sql = "SELECT * FROM menuitems ORDER BY drinkcategory, menuitemname";
             ResultSet rs = stmt.executeQuery(sql);
 
@@ -328,7 +318,7 @@ public class BobaShopManagerGUI extends JFrame {
     private void viewInventory() {
         inventoryDisplayArea.setText("");
         try {
-            Statement stmt = conn.createStatement();
+            Statement stmt = dbManager.getConnection().createStatement();
             String sql = "SELECT * FROM inventory ORDER BY ingredientname";
             ResultSet rs = stmt.executeQuery(sql);
 
@@ -378,7 +368,7 @@ public class BobaShopManagerGUI extends JFrame {
                 }
 
                 // Get the next ingredientid
-                Statement stmt = conn.createStatement();
+                Statement stmt = dbManager.getConnection().createStatement();
                 ResultSet rs = stmt.executeQuery("SELECT MAX(ingredientid) as maxid FROM inventory");
                 int nextId = 1;
                 if (rs.next() && rs.getObject("maxid") != null) {
@@ -388,7 +378,7 @@ public class BobaShopManagerGUI extends JFrame {
 
                 // Insert new inventory item
                 String sql = "INSERT INTO inventory (ingredientid, ingredientname, ingredientcount) VALUES (?, ?, ?)";
-                PreparedStatement pstmt = conn.prepareStatement(sql);
+                PreparedStatement pstmt = dbManager.getConnection().prepareStatement(sql);
                 pstmt.setInt(1, nextId);
                 pstmt.setString(2, name);
                 pstmt.setInt(3, quantity);
@@ -416,7 +406,7 @@ public class BobaShopManagerGUI extends JFrame {
     private void updateInventoryQuantity() {
         try {
             // First, show current inventory
-            Statement stmt = conn.createStatement();
+            Statement stmt = dbManager.getConnection().createStatement();
             String sql = "SELECT ingredientid, ingredientname, ingredientcount FROM inventory ORDER BY ingredientid";
             ResultSet rs = stmt.executeQuery(sql);
 
@@ -463,7 +453,7 @@ public class BobaShopManagerGUI extends JFrame {
 
                 // Update the quantity
                 String updateSql = "UPDATE inventory SET ingredientcount = ? WHERE ingredientid = ?";
-                PreparedStatement pstmt = conn.prepareStatement(updateSql);
+                PreparedStatement pstmt = dbManager.getConnection().prepareStatement(updateSql);
                 pstmt.setInt(1, newQuantity);
                 pstmt.setInt(2, ingredientId);
 
@@ -472,7 +462,7 @@ public class BobaShopManagerGUI extends JFrame {
                 if (rowsAffected > 0) {
                     // Get updated item details
                     String selectSql = "SELECT * FROM inventory WHERE ingredientid = ?";
-                    PreparedStatement selectStmt = conn.prepareStatement(selectSql);
+                    PreparedStatement selectStmt = dbManager.getConnection().prepareStatement(selectSql);
                     selectStmt.setInt(1, ingredientId);
                     ResultSet updatedRs = selectStmt.executeQuery();
 
@@ -532,7 +522,7 @@ public class BobaShopManagerGUI extends JFrame {
                 }
 
                 // Get the next menuitemid
-                Statement stmt = conn.createStatement();
+                Statement stmt = dbManager.getConnection().createStatement();
                 ResultSet rs = stmt.executeQuery("SELECT MAX(menuitemid) as maxid FROM menuitems");
                 int nextId = 1;
                 if (rs.next() && rs.getObject("maxid") != null) {
@@ -542,7 +532,7 @@ public class BobaShopManagerGUI extends JFrame {
 
                 // Insert new menu item
                 String sql = "INSERT INTO menuitems (menuitemid, drinkcategory, menuitemname, price) VALUES (?, ?, ?, ?)";
-                PreparedStatement pstmt = conn.prepareStatement(sql);
+                PreparedStatement pstmt = dbManager.getConnection().prepareStatement(sql);
                 pstmt.setInt(1, nextId);
                 pstmt.setString(2, category);
                 pstmt.setString(3, name);
@@ -572,7 +562,7 @@ public class BobaShopManagerGUI extends JFrame {
     private void updateMenuItemPrice() {
         try {
             // First, show current menu items
-            Statement stmt = conn.createStatement();
+            Statement stmt = dbManager.getConnection().createStatement();
             String sql = "SELECT menuitemid, menuitemname, price FROM menuitems ORDER BY menuitemid";
             ResultSet rs = stmt.executeQuery(sql);
 
@@ -619,7 +609,7 @@ public class BobaShopManagerGUI extends JFrame {
 
                 // Update the price
                 String updateSql = "UPDATE menuitems SET price = ? WHERE menuitemid = ?";
-                PreparedStatement pstmt = conn.prepareStatement(updateSql);
+                PreparedStatement pstmt = dbManager.getConnection().prepareStatement(updateSql);
                 pstmt.setDouble(1, newPrice);
                 pstmt.setInt(2, itemId);
 
@@ -628,7 +618,7 @@ public class BobaShopManagerGUI extends JFrame {
                 if (rowsAffected > 0) {
                     // Get updated item details
                     String selectSql = "SELECT * FROM menuitems WHERE menuitemid = ?";
-                    PreparedStatement selectStmt = conn.prepareStatement(selectSql);
+                    PreparedStatement selectStmt = dbManager.getConnection().prepareStatement(selectSql);
                     selectStmt.setInt(1, itemId);
                     ResultSet updatedRs = selectStmt.executeQuery();
 
@@ -664,7 +654,7 @@ public class BobaShopManagerGUI extends JFrame {
     private void viewEmployees() {
         employeeDisplayArea.setText("");
         try {
-            Statement stmt = conn.createStatement();
+            Statement stmt = dbManager.getConnection().createStatement();
             String sql = "SELECT * FROM employees ORDER BY employeeid";
             ResultSet rs = stmt.executeQuery(sql);
 
@@ -720,7 +710,7 @@ public class BobaShopManagerGUI extends JFrame {
                 }
 
                 // Get the next employeeid
-                Statement stmt = conn.createStatement();
+                Statement stmt = dbManager.getConnection().createStatement();
                 ResultSet rs = stmt.executeQuery("SELECT MAX(employeeid) as maxid FROM employees");
                 int nextId = 1;
                 if (rs.next() && rs.getObject("maxid") != null) {
@@ -730,7 +720,7 @@ public class BobaShopManagerGUI extends JFrame {
 
                 // Insert new employee
                 String sql = "INSERT INTO employees (employeeid, employeename, employeerole, hoursworked) VALUES (?, ?, ?, ?)";
-                PreparedStatement pstmt = conn.prepareStatement(sql);
+                PreparedStatement pstmt = dbManager.getConnection().prepareStatement(sql);
                 pstmt.setInt(1, nextId);
                 pstmt.setString(2, name);
                 pstmt.setString(3, role);
@@ -761,7 +751,7 @@ public class BobaShopManagerGUI extends JFrame {
     private void updateEmployee() {
         try {
             // First, show current employees
-            Statement stmt = conn.createStatement();
+            Statement stmt = dbManager.getConnection().createStatement();
             String sql = "SELECT * FROM employees ORDER BY employeeid";
             ResultSet rs = stmt.executeQuery(sql);
 
@@ -812,7 +802,7 @@ public class BobaShopManagerGUI extends JFrame {
 
                 // Get current employee data
                 String selectSql = "SELECT * FROM employees WHERE employeeid = ?";
-                PreparedStatement selectStmt = conn.prepareStatement(selectSql);
+                PreparedStatement selectStmt = dbManager.getConnection().prepareStatement(selectSql);
                 selectStmt.setInt(1, employeeId);
                 ResultSet currentRs = selectStmt.executeQuery();
 
@@ -844,7 +834,7 @@ public class BobaShopManagerGUI extends JFrame {
 
                 // Update employee
                 String updateSql = "UPDATE employees SET employeename = ?, employeerole = ?, hoursworked = ? WHERE employeeid = ?";
-                PreparedStatement pstmt = conn.prepareStatement(updateSql);
+                PreparedStatement pstmt = dbManager.getConnection().prepareStatement(updateSql);
                 pstmt.setString(1, newName);
                 pstmt.setString(2, newRole);
                 pstmt.setInt(3, newHours);
@@ -876,7 +866,7 @@ public class BobaShopManagerGUI extends JFrame {
     private void removeEmployee() {
         try {
             // First, show current employees
-            Statement stmt = conn.createStatement();
+            Statement stmt = dbManager.getConnection().createStatement();
             String sql = "SELECT * FROM employees ORDER BY employeeid";
             ResultSet rs = stmt.executeQuery(sql);
 
@@ -917,7 +907,7 @@ public class BobaShopManagerGUI extends JFrame {
 
                 // Get employee info before deletion
                 String selectSql = "SELECT * FROM employees WHERE employeeid = ?";
-                PreparedStatement selectStmt = conn.prepareStatement(selectSql);
+                PreparedStatement selectStmt = dbManager.getConnection().prepareStatement(selectSql);
                 selectStmt.setInt(1, employeeId);
                 ResultSet empRs = selectStmt.executeQuery();
 
@@ -944,7 +934,7 @@ public class BobaShopManagerGUI extends JFrame {
                 if (confirm == JOptionPane.YES_OPTION) {
                     // Delete employee
                     String deleteSql = "DELETE FROM employees WHERE employeeid = ?";
-                    PreparedStatement pstmt = conn.prepareStatement(deleteSql);
+                    PreparedStatement pstmt = dbManager.getConnection().prepareStatement(deleteSql);
                     pstmt.setInt(1, employeeId);
 
                     int rowsAffected = pstmt.executeUpdate();
@@ -976,7 +966,7 @@ public class BobaShopManagerGUI extends JFrame {
     private void generateTopSellingReport() {
         reportsDisplayArea.setText("");
         try {
-            Statement stmt = conn.createStatement();
+            Statement stmt = dbManager.getConnection().createStatement();
             String sql = "SELECT MenuItems.menuItemName, SUM(OrderItems.quantity) AS total_qty " +
                     "FROM OrderItems JOIN MenuItems ON OrderItems.menuItemID = MenuItems.menuItemID " +
                     "GROUP BY MenuItems.menuItemName ORDER BY total_qty DESC LIMIT 5";
@@ -1004,7 +994,7 @@ public class BobaShopManagerGUI extends JFrame {
     private void generateWorstSellingReport() {
         reportsDisplayArea.setText("");
         try {
-            Statement stmt = conn.createStatement();
+            Statement stmt = dbManager.getConnection().createStatement();
             String sql = "SELECT MenuItems.menuItemName, SUM(OrderItems.quantity) AS total_qty " +
                     "FROM OrderItems JOIN MenuItems ON OrderItems.menuItemID = MenuItems.menuItemID " +
                     "GROUP BY MenuItems.menuItemName ORDER BY total_qty ASC LIMIT 5";
@@ -1032,7 +1022,7 @@ public class BobaShopManagerGUI extends JFrame {
     private void generateRevenueTodayReport() {
         reportsDisplayArea.setText("");
         try {
-            Statement stmt = conn.createStatement();
+            Statement stmt = dbManager.getConnection().createStatement();
             String sql = "SELECT SUM(totalCost) AS revenue_today FROM Orders WHERE DATE(timeOfOrder) = CURRENT_DATE";
             ResultSet rs = stmt.executeQuery(sql);
 
@@ -1057,7 +1047,7 @@ public class BobaShopManagerGUI extends JFrame {
     private void generateTotalRevenueReport() {
         reportsDisplayArea.setText("");
         try {
-            Statement stmt = conn.createStatement();
+            Statement stmt = dbManager.getConnection().createStatement();
             String sql = "SELECT SUM(totalCost) AS total_revenue FROM Orders";
             ResultSet rs = stmt.executeQuery(sql);
 
@@ -1082,7 +1072,7 @@ public class BobaShopManagerGUI extends JFrame {
     private void generateAvgOrderCostReport() {
         reportsDisplayArea.setText("");
         try {
-            Statement stmt = conn.createStatement();
+            Statement stmt = dbManager.getConnection().createStatement();
             String sql = "SELECT AVG(Orders.totalCost) AS avg_order_cost FROM Orders";
             ResultSet rs = stmt.executeQuery(sql);
 
@@ -1107,7 +1097,7 @@ public class BobaShopManagerGUI extends JFrame {
     private void generateOrdersTodayReport() {
         reportsDisplayArea.setText("");
         try {
-            Statement stmt = conn.createStatement();
+            Statement stmt = dbManager.getConnection().createStatement();
             String sql = "SELECT COUNT(*) AS orders_today FROM Orders WHERE DATE(timeOfOrder) = CURRENT_DATE";
             ResultSet rs = stmt.executeQuery(sql);
 
@@ -1132,7 +1122,7 @@ public class BobaShopManagerGUI extends JFrame {
     private void generateFrequentCustomersReport() {
         reportsDisplayArea.setText("");
         try {
-            Statement stmt = conn.createStatement();
+            Statement stmt = dbManager.getConnection().createStatement();
             String sql = "SELECT customerID, COUNT(*) AS order_count FROM Orders GROUP BY customerID ORDER BY order_count DESC LIMIT 5";
             ResultSet rs = stmt.executeQuery(sql);
 
@@ -1158,7 +1148,7 @@ public class BobaShopManagerGUI extends JFrame {
     private void generateOutOfStockReport() {
         reportsDisplayArea.setText("");
         try {
-            Statement stmt = conn.createStatement();
+            Statement stmt = dbManager.getConnection().createStatement();
             String sql = "SELECT ingredientID, ingredientName, ingredientCount FROM Inventory WHERE ingredientCount = 0";
             ResultSet rs = stmt.executeQuery(sql);
 
@@ -1192,7 +1182,7 @@ public class BobaShopManagerGUI extends JFrame {
     private void generateSugarLevelReport() {
         reportsDisplayArea.setText("");
         try {
-            Statement stmt = conn.createStatement();
+            Statement stmt = dbManager.getConnection().createStatement();
             String sql = "SELECT sugarLevel, SUM(quantity) AS drinks_count FROM OrderItems GROUP BY sugarLevel ORDER BY drinks_count DESC";
             ResultSet rs = stmt.executeQuery(sql);
 
@@ -1218,7 +1208,7 @@ public class BobaShopManagerGUI extends JFrame {
     private void generateIceLevelReport() {
         reportsDisplayArea.setText("");
         try {
-            Statement stmt = conn.createStatement();
+            Statement stmt = dbManager.getConnection().createStatement();
             String sql = "SELECT iceLevel, SUM(quantity) AS drinks_count FROM OrderItems GROUP BY iceLevel ORDER BY drinks_count DESC";
             ResultSet rs = stmt.executeQuery(sql);
 
@@ -1244,7 +1234,7 @@ public class BobaShopManagerGUI extends JFrame {
     private void generateYearlyRevenueReport() {
         reportsDisplayArea.setText("");
         try {
-            Statement stmt = conn.createStatement();
+            Statement stmt = dbManager.getConnection().createStatement();
             String sql = "SELECT EXTRACT(YEAR FROM timeOfOrder) AS year, SUM(totalCost) AS revenue FROM Orders GROUP BY year ORDER BY year";
             ResultSet rs = stmt.executeQuery(sql);
 
@@ -1270,7 +1260,7 @@ public class BobaShopManagerGUI extends JFrame {
     private void generateOrdersByHourReport() {
         reportsDisplayArea.setText("");
         try {
-            Statement stmt = conn.createStatement();
+            Statement stmt = dbManager.getConnection().createStatement();
             String sql = "SELECT EXTRACT(HOUR FROM \"timeoforder\") AS hour_of_day, COUNT(*) AS orders, SUM(totalcost) AS cost "
                     +
                     "FROM orders GROUP BY hour_of_day ORDER BY hour_of_day";
@@ -1299,7 +1289,7 @@ public class BobaShopManagerGUI extends JFrame {
     private void generatePeakSalesReport() {
         reportsDisplayArea.setText("");
         try {
-            Statement stmt = conn.createStatement();
+            Statement stmt = dbManager.getConnection().createStatement();
             String sql = "SELECT \"timeoforder\"::date AS order_date, SUM(totalcost) AS total " +
                     "FROM orders GROUP BY order_date ORDER BY total DESC LIMIT 10";
             ResultSet rs = stmt.executeQuery(sql);
@@ -1326,7 +1316,7 @@ public class BobaShopManagerGUI extends JFrame {
     private void generateOrdersByWeekReport() {
         reportsDisplayArea.setText("");
         try {
-            Statement stmt = conn.createStatement();
+            Statement stmt = dbManager.getConnection().createStatement();
             String sql = "SELECT orderWeek, COUNT(*) FROM orders GROUP BY orderWeek";
             ResultSet rs = stmt.executeQuery(sql);
 
@@ -1352,7 +1342,7 @@ public class BobaShopManagerGUI extends JFrame {
     private void generateMenuItemIngredientsReport() {
         reportsDisplayArea.setText("");
         try {
-            Statement stmt = conn.createStatement();
+            Statement stmt = dbManager.getConnection().createStatement();
             String sql = "SELECT mi.menuitemid, menuitemname, COUNT(*) FROM MenuItemIngredients m " +
                     "INNER JOIN MenuItems mi ON m.menuitemid = mi.menuitemid GROUP BY mi.menuitemid";
             ResultSet rs = stmt.executeQuery(sql);
@@ -1407,7 +1397,7 @@ public class BobaShopManagerGUI extends JFrame {
     // of day
     private void showPeriodUsageChart() {
         try {
-            Statement stmt = conn.createStatement();
+            Statement stmt = dbManager.getConnection().createStatement();
             String sql = "SELECT EXTRACT(HOUR FROM \"timeoforder\") AS hour_of_day, COUNT(*) AS orders, SUM(totalcost) AS cost "
                     +
                     "FROM orders GROUP BY hour_of_day ORDER BY hour_of_day";
@@ -1569,22 +1559,19 @@ public class BobaShopManagerGUI extends JFrame {
         }
     }
 
-    private static Map<String, String> loadEnvFile(String filePath) {
-        Map<String, String> env = new HashMap<>();
-        try {
-            Files.lines(Paths.get(filePath))
-                    .filter(line -> line.contains("=") && !line.startsWith("#"))
-                    .forEach(line -> {
-                        String[] parts = line.split("=", 2);
-                        env.put(parts[0].trim(), parts[1].trim());
-                    });
-        } catch (Exception e) {
-            System.err.println("Failed to load .env file: " + e.getMessage());
-        }
-        return env;
-    }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new BobaShopManagerGUI());
+        SwingUtilities.invokeLater(() -> {
+            BobaShopManagerGUI gui = new BobaShopManagerGUI();
+            
+            // Add window listener to cleanup on close
+            gui.addWindowListener(new java.awt.event.WindowAdapter() {
+                @Override
+                public void windowClosing(java.awt.event.WindowEvent e) {
+                    gui.cleanup();
+                    System.exit(0);
+                }
+            });
+        });
     }
 }
