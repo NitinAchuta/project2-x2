@@ -13,9 +13,6 @@ package New_Additions;
  * implements standard Object methods for comparison and string representation,
  * and follows JavaBean conventions for easy integration with frameworks.
  * 
- * @author CS331 Project Team
- * @version 1.0
- * @since 2025
  */
 public class MenuItem {
     /** The unique identifier for the menu item in the database */

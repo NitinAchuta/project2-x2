@@ -14,9 +14,6 @@ import java.awt.event.ActionListener;
  * The landing page features a gradient background, styled buttons, and proper
  * error handling for mode transitions.
  * 
- * @author CS331 Project Team
- * @version 1.0
- * @since 2025
  */
 public class LandingPage extends JFrame {
 
