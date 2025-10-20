@@ -144,6 +144,143 @@ public class MockDataProvider {
         orders.add(order3);
         orderItems.add(new OrderItem(nextOrderItemId++, order3.getOrderID(), 17, 2)); // 2x Brown Sugar Boba
     }
+
+    // Public methods for data access
+    public List<MenuItem> getAllMenuItems() {
+        return new ArrayList<>(menuItems);
+    }
+
+    public boolean addMenuItem(MenuItem item) {
+        item.setMenuItemID(nextMenuItemId++);
+        menuItems.add(item);
+        return true;
+    }
+
+    public boolean updateMenuItemPrice(int menuItemId, double newPrice) {
+        for (MenuItem item : menuItems) {
+            if (item.getMenuItemID() == menuItemId) {
+                item.setPrice(newPrice);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public List<Inventory> getAllInventory() {
+        return new ArrayList<>(inventory);
+    }
+
+    public boolean addInventoryItem(Inventory item) {
+        item.setIngredientID(nextInventoryId++);
+        inventory.add(item);
+        return true;
+    }
+
+    public boolean updateInventoryQuantity(int ingredientId, int newQuantity) {
+        for (Inventory item : inventory) {
+            if (item.getIngredientID() == ingredientId) {
+                item.setIngredientCount(newQuantity);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public List<Employee> getAllEmployees() {
+        return new ArrayList<>(employees);
+    }
+
+    public boolean addEmployee(Employee employee) {
+        employee.setEmployeeID(nextEmployeeId++);
+        employees.add(employee);
+        return true;
+    }
+
+    public boolean updateEmployee(Employee employee) {
+        for (int i = 0; i < employees.size(); i++) {
+            if (employees.get(i).getEmployeeID() == employee.getEmployeeID()) {
+                employees.set(i, employee);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean deleteEmployee(int employeeId) {
+        return employees.removeIf(emp -> emp.getEmployeeID() == employeeId);
+    }
+
+    public List<Order> getAllOrders() {
+        return new ArrayList<>(orders);
+    }
+
+    public Map<String, Integer> getProductUsageData() {
+        Map<String, Integer> usage = new HashMap<>();
+
+        // Calculate usage based on order items
+        Map<Integer, Integer> itemCounts = new HashMap<>();
+        for (OrderItem item : orderItems) {
+            itemCounts.put(item.getMenuItemID(),
+                    itemCounts.getOrDefault(item.getMenuItemID(), 0) + item.getQuantity());
+        }
+
+        // Map to menu item names
+        for (Map.Entry<Integer, Integer> entry : itemCounts.entrySet()) {
+            for (MenuItem item : menuItems) {
+                if (item.getMenuItemID() == entry.getKey()) {
+                    usage.put(item.getMenuItemName(), entry.getValue());
+                    break;
+                }
+            }
+        }
+
+        return usage;
+    }
+
+    public double getTotalSales(java.sql.Date startDate, java.sql.Date endDate) {
+        double total = 0.0;
+
+        for (Order order : orders) {
+            java.sql.Date orderDate = new java.sql.Date(order.getTimeOfOrder().getTime());
+            if ((orderDate.equals(startDate) || orderDate.after(startDate)) &&
+                    (orderDate.equals(endDate) || orderDate.before(endDate))) {
+                total += order.getTotalCost();
+            }
+        }
+
+        return total;
+    }
+
+    public boolean createOrder(Order order, List<OrderItem> items) {
+        order.setOrderID(nextOrderId++);
+        orders.add(order);
+
+        for (OrderItem item : items) {
+            item.setOrderItemID(nextOrderItemId++);
+            item.setOrderID(order.getOrderID());
+            orderItems.add(item);
+        }
+
+        return true;
+    }
+
+    public int getNextId(String table) {
+        switch (table.toLowerCase()) {
+            case "menuitems":
+                return nextMenuItemId;
+            case "inventory":
+                return nextInventoryId;
+            case "employees":
+                return nextEmployeeId;
+            case "orders":
+                return nextOrderId;
+            case "orderitems":
+                return nextOrderItemId;
+            default:
+                return 1;
+        }
+    }
+    
     private int getCurrentWeek() {
         Calendar cal = Calendar.getInstance();
         return cal.get(Calendar.WEEK_OF_YEAR);
