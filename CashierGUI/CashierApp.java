@@ -1,9 +1,13 @@
 package CashierGUI;
+
 import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
 import java.sql.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.stream.Stream;
 import java.nio.file.*;
 
@@ -39,16 +43,16 @@ public class CashierApp {
     /** Keeps track of total cost. */
     private double totalCost = 0.0;
 
-    /** 
-     * Constructs the cashier app and inits GUI. 
+    /**
+     * Constructs the cashier app and inits GUI.
      */
     public CashierApp() {
         loadMenuItems();
         createAndShowGUI();
     }
 
-    /** 
-     * Creates and shows the GUI layout for cashier. 
+    /**
+     * Creates and shows the GUI layout for cashier.
      */
     private void createAndShowGUI() {
         JFrame frame = new JFrame("Cashier - Order System");
@@ -89,7 +93,8 @@ public class CashierApp {
         JPanel rightPanel = new JPanel(new GridLayout(0, 1));
         JLabel quantityLabel = new JLabel("Quantity", JLabel.CENTER);
         quantityBox = new JComboBox<>();
-        for (int i = 1; i <= 10; i++) quantityBox.addItem(i);
+        for (int i = 1; i <= 10; i++)
+            quantityBox.addItem(i);
         JLabel customerLabel = new JLabel("Customer Name", JLabel.CENTER);
         customerNameField = new JTextField();
         rightPanel.add(quantityLabel);
@@ -105,13 +110,14 @@ public class CashierApp {
         frame.setVisible(true);
     }
 
-    /** 
-     * Loads menu items from databse and fills list. 
+    /**
+     * Loads menu items from databse and fills list.
      */
     private void loadMenuItems() {
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT menuitemid, menuitemname, price FROM menuitems ORDER BY menuitemid")) {
+                Statement stmt = conn.createStatement();
+                ResultSet rs = stmt
+                        .executeQuery("SELECT menuitemid, menuitemname, price FROM menuitems ORDER BY menuitemid")) {
 
             while (rs.next()) {
                 menuItems.add(new MenuItem(
@@ -125,8 +131,8 @@ public class CashierApp {
         }
     }
 
-    /** 
-     * Adds selected menu item to the current order list. 
+    /**
+     * Adds selected menu item to the current order list.
      */
     private void addToOrder() {
         int selectedIndex = menuList.getSelectedIndex();
@@ -146,8 +152,8 @@ public class CashierApp {
         totalLabel.setText("Total: $" + String.format("%.2f", totalCost));
     }
 
-    /** 
-     * Clears all items from the current order. 
+    /**
+     * Clears all items from the current order.
      */
     private void clearOrder() {
         currentOrder.clear();
@@ -157,8 +163,8 @@ public class CashierApp {
         customerNameField.setText("");
     }
 
-    /** 
-     * Submits the order to databse and resets UI. 
+    /**
+     * Submits the order to databse and resets UI.
      */
     private void submitOrder() {
         if (currentOrder.isEmpty()) {
@@ -206,35 +212,36 @@ public class CashierApp {
         }
     }
 
-    /** 
-     * Gets the next avaliable ID for a given table. 
+    /**
+     * Gets the next avaliable ID for a given table.
      */
     private int getNextID(Connection conn, String table, String idColumn) throws SQLException {
         String sql = "SELECT COALESCE(MAX(" + idColumn + "), 0) + 1 FROM " + table;
         try (Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-            if (rs.next()) return rs.getInt(1);
+                ResultSet rs = stmt.executeQuery(sql)) {
+            if (rs.next())
+                return rs.getInt(1);
         }
         return 1;
     }
 
-    /** 
-     * Retrives current week number from calender. 
+    /**
+     * Retrives current week number from calender.
      */
     private int getCurrentWeek() {
         java.util.Calendar cal = java.util.Calendar.getInstance();
         return cal.get(java.util.Calendar.WEEK_OF_YEAR);
     }
 
-    /** 
-     * Starts the cashier app. 
+    /**
+     * Starts the cashier app.
      */
     public static void main(String[] args) {
         SwingUtilities.invokeLater(CashierApp::new);
     }
 
-    /** 
-     * Represents a menu item entitty. 
+    /**
+     * Represents a menu item entitty.
      */
     static class MenuItem {
         int id;
@@ -249,8 +256,8 @@ public class CashierApp {
         }
     }
 
-    /** 
-     * Represents a menu item and its quantitty in an order. 
+    /**
+     * Represents a menu item and its quantitty in an order.
      */
     static class OrderItem {
         MenuItem menuItem;
@@ -263,8 +270,8 @@ public class CashierApp {
         }
     }
 
-    /** 
-     * Loads enviroment file and returns values as a map. 
+    /**
+     * Loads enviroment file and returns values as a map.
      */
     private static Map<String, String> loadEnvFile(String filePath) {
         Map<String, String> env = new HashMap<>();
@@ -276,11 +283,11 @@ public class CashierApp {
 
         try (Stream<String> lines = Files.lines(path)) {
             lines.map(String::trim)
-                .filter(line -> !line.isEmpty() && !line.startsWith("#") && line.contains("="))
-                .forEach(line -> {
-                    String[] parts = line.split("=", 2);
-                    env.put(parts[0].trim(), parts[1].trim());
-                });
+                    .filter(line -> !line.isEmpty() && !line.startsWith("#") && line.contains("="))
+                    .forEach(line -> {
+                        String[] parts = line.split("=", 2);
+                        env.put(parts[0].trim(), parts[1].trim());
+                    });
         } catch (IOException e) {
             System.err.println("Error reading enviroment file: " + e.getMessage());
         }

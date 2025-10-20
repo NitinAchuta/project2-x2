@@ -244,7 +244,7 @@ public class DatabaseManager {
     /**
      * Creates a new order with associated order items.
      * 
-     * @param order the Order object to be created
+     * @param order      the Order object to be created
      * @param orderItems List of OrderItem objects for the order
      * @return true if order creation was successful, false otherwise
      * @author harry
@@ -317,12 +317,20 @@ public class DatabaseManager {
             return mockProvider.addMenuItem(item);
         }
 
-        String query = "INSERT INTO menuitems (drinkcategory, menuitemname, price) VALUES (?, ?, ?)";
+        // First, get the next available menu item ID
+        int nextId = getNextMenuItemId();
+        if (nextId == -1) {
+            System.err.println("Error: Could not generate next menu item ID");
+            return false;
+        }
+
+        String query = "INSERT INTO menuitems (menuitemid, drinkcategory, menuitemname, price) VALUES (?, ?, ?, ?)";
 
         try (PreparedStatement pstmt = connection.prepareStatement(query)) {
-            pstmt.setString(1, item.getDrinkCategory());
-            pstmt.setString(2, item.getMenuItemName());
-            pstmt.setDouble(3, item.getPrice());
+            pstmt.setInt(1, nextId);
+            pstmt.setString(2, item.getDrinkCategory());
+            pstmt.setString(3, item.getMenuItemName());
+            pstmt.setDouble(4, item.getPrice());
 
             int rowsAffected = pstmt.executeUpdate();
             return rowsAffected > 0;
@@ -334,9 +342,33 @@ public class DatabaseManager {
     }
 
     /**
+     * Gets the next available menu item ID by finding the maximum existing ID and
+     * adding 1.
+     * 
+     * @return the next available ID, or -1 if there was an error
+     * @author assistant
+     */
+    private int getNextMenuItemId() {
+        String query = "SELECT COALESCE(MAX(menuitemid), 0) + 1 FROM menuitems";
+
+        try (PreparedStatement pstmt = connection.prepareStatement(query);
+                ResultSet rs = pstmt.executeQuery()) {
+
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+            return 1; // If no records exist, start with ID 1
+
+        } catch (SQLException e) {
+            System.err.println("Error getting next menu item ID: " + e.getMessage());
+            return -1;
+        }
+    }
+
+    /**
      * Updates the price of an existing menu item.
      * 
-     * @param itemId the ID of the menu item to update
+     * @param itemId   the ID of the menu item to update
      * @param newPrice the new price for the menu item
      * @return true if update was successful, false otherwise
      * @author harry
@@ -373,11 +405,19 @@ public class DatabaseManager {
             return mockProvider.addInventoryItem(item);
         }
 
-        String query = "INSERT INTO inventory (ingredientname, ingredientcount) VALUES (?, ?)";
+        // First, get the next available inventory item ID
+        int nextId = getNextInventoryItemId();
+        if (nextId == -1) {
+            System.err.println("Error: Could not generate next inventory item ID");
+            return false;
+        }
+
+        String query = "INSERT INTO inventory (ingredientid, ingredientname, ingredientcount) VALUES (?, ?, ?)";
 
         try (PreparedStatement pstmt = connection.prepareStatement(query)) {
-            pstmt.setString(1, item.getIngredientName());
-            pstmt.setInt(2, item.getIngredientCount());
+            pstmt.setInt(1, nextId);
+            pstmt.setString(2, item.getIngredientName());
+            pstmt.setInt(3, item.getIngredientCount());
 
             int rowsAffected = pstmt.executeUpdate();
             return rowsAffected > 0;
@@ -389,9 +429,33 @@ public class DatabaseManager {
     }
 
     /**
+     * Gets the next available inventory item ID by finding the maximum existing ID
+     * and adding 1.
+     * 
+     * @return the next available ID, or -1 if there was an error
+     * @author assistant
+     */
+    private int getNextInventoryItemId() {
+        String query = "SELECT COALESCE(MAX(ingredientid), 0) + 1 FROM inventory";
+
+        try (PreparedStatement pstmt = connection.prepareStatement(query);
+                ResultSet rs = pstmt.executeQuery()) {
+
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+            return 1; // If no records exist, start with ID 1
+
+        } catch (SQLException e) {
+            System.err.println("Error getting next inventory item ID: " + e.getMessage());
+            return -1;
+        }
+    }
+
+    /**
      * Updates the quantity of an existing inventory item.
      * 
-     * @param itemId the ID of the inventory item to update
+     * @param itemId      the ID of the inventory item to update
      * @param newQuantity the new quantity for the inventory item
      * @return true if update was successful, false otherwise
      * @author harry
@@ -428,12 +492,20 @@ public class DatabaseManager {
             return mockProvider.addEmployee(employee);
         }
 
-        String query = "INSERT INTO employees (employeename, employeerole, hoursworked) VALUES (?, ?, ?)";
+        // First, get the next available employee ID
+        int nextId = getNextEmployeeId();
+        if (nextId == -1) {
+            System.err.println("Error: Could not generate next employee ID");
+            return false;
+        }
+
+        String query = "INSERT INTO employees (employeeid, employeename, employeerole, hoursworked) VALUES (?, ?, ?, ?)";
 
         try (PreparedStatement pstmt = connection.prepareStatement(query)) {
-            pstmt.setString(1, employee.getEmployeeName());
-            pstmt.setString(2, employee.getEmployeeRole());
-            pstmt.setInt(3, employee.getHoursWorked());
+            pstmt.setInt(1, nextId);
+            pstmt.setString(2, employee.getEmployeeName());
+            pstmt.setString(3, employee.getEmployeeRole());
+            pstmt.setInt(4, employee.getHoursWorked());
 
             int rowsAffected = pstmt.executeUpdate();
             return rowsAffected > 0;
@@ -441,6 +513,30 @@ public class DatabaseManager {
         } catch (SQLException e) {
             System.err.println("Error adding employee: " + e.getMessage());
             return false;
+        }
+    }
+
+    /**
+     * Gets the next available employee ID by finding the maximum existing ID and
+     * adding 1.
+     * 
+     * @return the next available ID, or -1 if there was an error
+     * @author assistant
+     */
+    private int getNextEmployeeId() {
+        String query = "SELECT COALESCE(MAX(employeeid), 0) + 1 FROM employees";
+
+        try (PreparedStatement pstmt = connection.prepareStatement(query);
+                ResultSet rs = pstmt.executeQuery()) {
+
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+            return 1; // If no records exist, start with ID 1
+
+        } catch (SQLException e) {
+            System.err.println("Error getting next employee ID: " + e.getMessage());
+            return -1;
         }
     }
 
@@ -539,7 +635,7 @@ public class DatabaseManager {
      * Calculates total sales for a given date range.
      * 
      * @param startDate the start date for sales calculation
-     * @param endDate the end date for sales calculation
+     * @param endDate   the end date for sales calculation
      * @return total sales amount for the specified date range
      * @author harry
      */

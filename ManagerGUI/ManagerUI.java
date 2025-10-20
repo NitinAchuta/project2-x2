@@ -1,6 +1,13 @@
+package ManagerGUI;
+
 import javax.swing.*;
 import java.awt.*;
 import java.sql.*;
+import New_Additions.DatabaseManager;
+import New_Additions.LandingPage;
+import New_Additions.MenuItem;
+import New_Additions.Inventory;
+import New_Additions.Employee;
 
 /**
  * Manager UI for managing menu, inventory, employees, and reports.
@@ -106,6 +113,7 @@ public class ManagerUI extends JFrame {
 
     /**
      * Builds the header with title and back button.
+     * 
      * @return configured header panel
      */
     private JPanel createHeaderPanel() {
@@ -131,6 +139,7 @@ public class ManagerUI extends JFrame {
 
     /**
      * Builds the status panel indicating mock or live DB mode.
+     * 
      * @return configured status panel
      */
     private JPanel createStatusPanel() {
@@ -151,6 +160,7 @@ public class ManagerUI extends JFrame {
 
     /**
      * Builds the Menu Management tab UI.
+     * 
      * @return menu management panel
      */
     private JPanel createMenuManagementTab() {
@@ -200,6 +210,7 @@ public class ManagerUI extends JFrame {
 
     /**
      * Builds the Inventory Management tab UI.
+     * 
      * @return inventory management panel
      */
     private JPanel createInventoryManagementTab() {
@@ -244,6 +255,7 @@ public class ManagerUI extends JFrame {
 
     /**
      * Builds the Employee Management tab UI.
+     * 
      * @return employee management panel
      */
     private JPanel createEmployeeManagementTab() {
@@ -293,6 +305,7 @@ public class ManagerUI extends JFrame {
 
     /**
      * Builds the Reports & Analytics tab UI.
+     * 
      * @return reports panel
      */
     private JPanel createReportsTab() {
@@ -343,7 +356,8 @@ public class ManagerUI extends JFrame {
 
     /**
      * Creates a styled JButton with tooltip.
-     * @param text button label
+     * 
+     * @param text    button label
      * @param tooltip tooltip text
      * @return styled button
      */
@@ -358,7 +372,8 @@ public class ManagerUI extends JFrame {
 
     /**
      * Creates a report button wired to a runnable action.
-     * @param text button label
+     * 
+     * @param text   button label
      * @param action action to run on click
      * @return configured button
      */
@@ -370,8 +385,9 @@ public class ManagerUI extends JFrame {
 
     /**
      * Shows a standard initial message in a text area.
-     * @param area destination text area
-     * @param title section title
+     * 
+     * @param area        destination text area
+     * @param title       section title
      * @param description brief description for the section
      */
     private void showInitialMessage(JTextArea area, String title, String description) {

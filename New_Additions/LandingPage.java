@@ -254,13 +254,10 @@ public class LandingPage extends JFrame {
      */
     private void openManagerInterface() {
         try {
-            // TODO: Replace with actual ManagerUI class when available
-            // new ManagerUI();
-            JOptionPane.showMessageDialog(this,
-                    "Manager interface not yet implemented",
-                    "Info",
-                    JOptionPane.INFORMATION_MESSAGE);
-            // dispose(); // Close landing page when ManagerUI is ready
+            // Create and display the Manager UI
+            ManagerGUI.ManagerUI managerUI = new ManagerGUI.ManagerUI();
+            managerUI.setVisible(true);
+            dispose(); // Close landing page when ManagerUI is ready
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this,
                     "Failed to open Manager interface: " + e.getMessage(),
@@ -280,13 +277,10 @@ public class LandingPage extends JFrame {
      */
     private void openCashierInterface() {
         try {
-            // TODO: Replace with actual CashierUI class when available
-            // new CashierUI();
-            JOptionPane.showMessageDialog(this,
-                    "Cashier interface not yet implemented",
-                    "Info",
-                    JOptionPane.INFORMATION_MESSAGE);
-            // dispose(); // Close landing page when CashierUI is ready
+            // Create and display the Cashier UI
+            CashierUI cashierUI = new CashierUI();
+            cashierUI.setVisible(true);
+            dispose(); // Close landing page when CashierUI is ready
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this,
                     "Failed to open Cashier interface: " + e.getMessage(),
