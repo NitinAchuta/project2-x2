@@ -10,8 +10,11 @@ import java.util.stream.Stream;
 
 /**
  * DatabaseManager handles database connections and provides methods for data
- * access
- * Supports both real database connections and mock data mode
+ * access. Supports both real database connections and mock data mode.
+ * 
+ * @author harry
+ * @version 1.0
+ * @since 2024
  */
 public class DatabaseManager {
 
@@ -20,6 +23,13 @@ public class DatabaseManager {
     private Connection connection;
     private MockDataProvider mockProvider;
 
+    /**
+     * Constructs a new DatabaseManager instance.
+     * Attempts to establish a database connection, falls back to mock data mode
+     * if connection fails.
+     * 
+     * @author harry
+     */
     public DatabaseManager() {
         this.mockProvider = new MockDataProvider();
         try {
@@ -32,6 +42,12 @@ public class DatabaseManager {
         }
     }
 
+    /**
+     * Initializes the database connection using environment variables.
+     * 
+     * @throws SQLException if database connection fails
+     * @author harry
+     */
     private void initializeConnection() throws SQLException {
         Map<String, String> env = loadEnvironment();
 
@@ -58,14 +74,32 @@ public class DatabaseManager {
         }
     }
 
+    /**
+     * Checks if the database is currently connected.
+     * 
+     * @return true if connected to database, false otherwise
+     * @author harry
+     */
     public boolean isConnected() {
         return isConnected;
     }
 
+    /**
+     * Checks if the system is currently using mock data.
+     * 
+     * @return true if using mock data, false if using real database
+     * @author harry
+     */
     public boolean isUsingMockData() {
         return useMockData;
     }
 
+    /**
+     * Gets the current connection status as a string.
+     * 
+     * @return "Connected to Database" if connected, "Using Mock Data" otherwise
+     * @author harry
+     */
     public String getConnectionStatus() {
         if (isConnected) {
             return "Connected to Database";
@@ -74,7 +108,12 @@ public class DatabaseManager {
         }
     }
 
-    // Menu Items methods matching the UI expectations
+    /**
+     * Retrieves all menu items from the database or mock data.
+     * 
+     * @return List of MenuItem objects containing all menu items
+     * @author harry
+     */
     public List<MenuItem> getAllMenuItems() {
         if (useMockData) {
             return mockProvider.getAllMenuItems();
@@ -102,7 +141,12 @@ public class DatabaseManager {
         return items;
     }
 
-    // Inventory methods
+    /**
+     * Retrieves all inventory items from the database or mock data.
+     * 
+     * @return List of Inventory objects containing all inventory items
+     * @author harry
+     */
     public List<Inventory> getAllInventory() {
         if (useMockData) {
             return mockProvider.getAllInventory();
@@ -129,7 +173,12 @@ public class DatabaseManager {
         return items;
     }
 
-    // Employee methods
+    /**
+     * Retrieves all employees from the database or mock data.
+     * 
+     * @return List of Employee objects containing all employees
+     * @author harry
+     */
     public List<Employee> getAllEmployees() {
         if (useMockData) {
             return mockProvider.getAllEmployees();
@@ -157,7 +206,12 @@ public class DatabaseManager {
         return employees;
     }
 
-    // Orders methods
+    /**
+     * Retrieves all orders from the database or mock data.
+     * 
+     * @return List of Order objects containing all orders
+     * @author harry
+     */
     public List<Order> getAllOrders() {
         if (useMockData) {
             return mockProvider.getAllOrders();
@@ -187,7 +241,14 @@ public class DatabaseManager {
         return orders;
     }
 
-    // Create order method matching CashierUI expectations
+    /**
+     * Creates a new order with associated order items.
+     * 
+     * @param order the Order object to be created
+     * @param orderItems List of OrderItem objects for the order
+     * @return true if order creation was successful, false otherwise
+     * @author harry
+     */
     public boolean createOrder(Order order, List<OrderItem> orderItems) {
         if (useMockData) {
             return mockProvider.createOrder(order, orderItems);
@@ -244,7 +305,13 @@ public class DatabaseManager {
         }
     }
 
-    // Add menu item
+    /**
+     * Adds a new menu item to the database or mock data.
+     * 
+     * @param item the MenuItem object to be added
+     * @return true if menu item was added successfully, false otherwise
+     * @author harry
+     */
     public boolean addMenuItem(MenuItem item) {
         if (useMockData) {
             return mockProvider.addMenuItem(item);
@@ -266,7 +333,14 @@ public class DatabaseManager {
         }
     }
 
-    // Update menu item price
+    /**
+     * Updates the price of an existing menu item.
+     * 
+     * @param itemId the ID of the menu item to update
+     * @param newPrice the new price for the menu item
+     * @return true if update was successful, false otherwise
+     * @author harry
+     */
     public boolean updateMenuItemPrice(int itemId, double newPrice) {
         if (useMockData) {
             return mockProvider.updateMenuItemPrice(itemId, newPrice);
@@ -287,7 +361,13 @@ public class DatabaseManager {
         }
     }
 
-    // Add inventory item
+    /**
+     * Adds a new inventory item to the database or mock data.
+     * 
+     * @param item the Inventory object to be added
+     * @return true if inventory item was added successfully, false otherwise
+     * @author harry
+     */
     public boolean addInventoryItem(Inventory item) {
         if (useMockData) {
             return mockProvider.addInventoryItem(item);
@@ -308,7 +388,14 @@ public class DatabaseManager {
         }
     }
 
-    // Update inventory quantity
+    /**
+     * Updates the quantity of an existing inventory item.
+     * 
+     * @param itemId the ID of the inventory item to update
+     * @param newQuantity the new quantity for the inventory item
+     * @return true if update was successful, false otherwise
+     * @author harry
+     */
     public boolean updateInventoryQuantity(int itemId, int newQuantity) {
         if (useMockData) {
             return mockProvider.updateInventoryQuantity(itemId, newQuantity);
@@ -329,7 +416,13 @@ public class DatabaseManager {
         }
     }
 
-    // Add employee
+    /**
+     * Adds a new employee to the database or mock data.
+     * 
+     * @param employee the Employee object to be added
+     * @return true if employee was added successfully, false otherwise
+     * @author harry
+     */
     public boolean addEmployee(Employee employee) {
         if (useMockData) {
             return mockProvider.addEmployee(employee);
@@ -351,7 +444,13 @@ public class DatabaseManager {
         }
     }
 
-    // Update employee
+    /**
+     * Updates an existing employee in the database or mock data.
+     * 
+     * @param employee the Employee object with updated information
+     * @return true if update was successful, false otherwise
+     * @author harry
+     */
     public boolean updateEmployee(Employee employee) {
         if (useMockData) {
             return mockProvider.updateEmployee(employee);
@@ -374,7 +473,13 @@ public class DatabaseManager {
         }
     }
 
-    // Delete employee
+    /**
+     * Deletes an employee from the database or mock data.
+     * 
+     * @param employeeId the ID of the employee to delete
+     * @return true if employee was deleted successfully, false otherwise
+     * @author harry
+     */
     public boolean deleteEmployee(int employeeId) {
         if (useMockData) {
             return mockProvider.deleteEmployee(employeeId);
@@ -394,7 +499,12 @@ public class DatabaseManager {
         }
     }
 
-    // Get product usage data for charts
+    /**
+     * Retrieves product usage data for charts and analytics.
+     * 
+     * @return Map with product names as keys and usage counts as values
+     * @author harry
+     */
     public Map<String, Integer> getProductUsageData() {
         if (useMockData) {
             return mockProvider.getProductUsageData();
@@ -425,7 +535,14 @@ public class DatabaseManager {
         return usage;
     }
 
-    // Get sales data for reports
+    /**
+     * Calculates total sales for a given date range.
+     * 
+     * @param startDate the start date for sales calculation
+     * @param endDate the end date for sales calculation
+     * @return total sales amount for the specified date range
+     * @author harry
+     */
     public double getTotalSales(java.sql.Date startDate, java.sql.Date endDate) {
         if (useMockData) {
             return mockProvider.getTotalSales(startDate, endDate);
@@ -450,12 +567,21 @@ public class DatabaseManager {
         return 0.0;
     }
 
-    // Close connection method expected by ManagerUI
+    /**
+     * Closes the database connection.
+     * This method is expected by ManagerUI.
+     * 
+     * @author harry
+     */
     public void closeConnection() {
         close();
     }
 
-    // Close connection
+    /**
+     * Closes the database connection.
+     * 
+     * @author harry
+     */
     public void close() {
         if (connection != null && !useMockData) {
             try {
@@ -466,7 +592,12 @@ public class DatabaseManager {
         }
     }
 
-    // Load environment variables from .env file
+    /**
+     * Loads environment variables from .env file.
+     * 
+     * @return Map containing environment variables
+     * @author harry
+     */
     private Map<String, String> loadEnvironment() {
         Map<String, String> env = new HashMap<>();
         Path envPath = Paths.get(".env");

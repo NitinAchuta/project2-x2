@@ -3,6 +3,15 @@ package New_Additions;
 import java.sql.Timestamp;
 import java.util.*;
 
+/**
+ * MockDataProvider provides mock data for testing and development purposes.
+ * This class simulates database operations when a real database connection
+ * is not available.
+ * 
+ * @author harry
+ * @version 1.0
+ * @since 2024
+ */
 public class MockDataProvider {
     private List<MenuItem> menuItems;
     private List<Inventory> inventory;
@@ -16,10 +25,20 @@ public class MockDataProvider {
     private int nextOrderId = 1;
     private int nextOrderItemId = 1;
 
+    /**
+     * Constructs a new MockDataProvider and initializes mock data.
+     * 
+     * @author harry
+     */
     public MockDataProvider() {
         initializeMockData();
     }
 
+    /**
+     * Initializes all mock data collections.
+     * 
+     * @author harry
+     */
     private void initializeMockData() {
         initializeMenuItems();
         initializeInventory();
@@ -27,6 +46,11 @@ public class MockDataProvider {
         initializeOrders();
     }
 
+    /**
+     * Initializes mock menu items data.
+     * 
+     * @author harry
+     */
     private void initializeMenuItems() {
         menuItems = new ArrayList<>();
 
@@ -61,6 +85,11 @@ public class MockDataProvider {
         menuItems.add(new MenuItem(nextMenuItemId++, "Specialty", "Seasonal Special", 6.50));
     }
 
+    /**
+     * Initializes mock inventory data.
+     * 
+     * @author harry
+     */
     private void initializeInventory() {
         inventory = new ArrayList<>();
 
@@ -109,6 +138,11 @@ public class MockDataProvider {
         inventory.add(new Inventory(nextInventoryId++, "Napkins", 800));
     }
 
+    /**
+     * Initializes mock employees data.
+     * 
+     * @author harry
+     */
     private void initializeEmployees() {
         employees = new ArrayList<>();
 
@@ -122,6 +156,11 @@ public class MockDataProvider {
         employees.add(new Employee(nextEmployeeId++, "Jennifer Lee", "Part-time Barista", 45));
     }
 
+    /**
+     * Initializes mock orders and order items data.
+     * 
+     * @author harry
+     */
     private void initializeOrders() {
         orders = new ArrayList<>();
         orderItems = new ArrayList<>();
@@ -145,17 +184,37 @@ public class MockDataProvider {
         orderItems.add(new OrderItem(nextOrderItemId++, order3.getOrderID(), 17, 2)); // 2x Brown Sugar Boba
     }
 
-    // Public methods for data access
+    /**
+     * Retrieves all mock menu items.
+     * 
+     * @return List of MenuItem objects containing all mock menu items
+     * @author harry
+     */
     public List<MenuItem> getAllMenuItems() {
         return new ArrayList<>(menuItems);
     }
 
+    /**
+     * Adds a new menu item to the mock data.
+     * 
+     * @param item the MenuItem object to be added
+     * @return always true for mock data operations
+     * @author harry
+     */
     public boolean addMenuItem(MenuItem item) {
         item.setMenuItemID(nextMenuItemId++);
         menuItems.add(item);
         return true;
     }
 
+    /**
+     * Updates the price of a menu item in mock data.
+     * 
+     * @param menuItemId the ID of the menu item to update
+     * @param newPrice the new price for the menu item
+     * @return true if menu item was found and updated, false otherwise
+     * @author harry
+     */
     public boolean updateMenuItemPrice(int menuItemId, double newPrice) {
         for (MenuItem item : menuItems) {
             if (item.getMenuItemID() == menuItemId) {
@@ -166,16 +225,37 @@ public class MockDataProvider {
         return false;
     }
 
+    /**
+     * Retrieves all mock inventory items.
+     * 
+     * @return List of Inventory objects containing all mock inventory items
+     * @author harry
+     */
     public List<Inventory> getAllInventory() {
         return new ArrayList<>(inventory);
     }
 
+    /**
+     * Adds a new inventory item to the mock data.
+     * 
+     * @param item the Inventory object to be added
+     * @return always true for mock data operations
+     * @author harry
+     */
     public boolean addInventoryItem(Inventory item) {
         item.setIngredientID(nextInventoryId++);
         inventory.add(item);
         return true;
     }
 
+    /**
+     * Updates the quantity of an inventory item in mock data.
+     * 
+     * @param ingredientId the ID of the inventory item to update
+     * @param newQuantity the new quantity for the inventory item
+     * @return true if inventory item was found and updated, false otherwise
+     * @author harry
+     */
     public boolean updateInventoryQuantity(int ingredientId, int newQuantity) {
         for (Inventory item : inventory) {
             if (item.getIngredientID() == ingredientId) {
@@ -186,16 +266,36 @@ public class MockDataProvider {
         return false;
     }
 
+    /**
+     * Retrieves all mock employees.
+     * 
+     * @return List of Employee objects containing all mock employees
+     * @author harry
+     */
     public List<Employee> getAllEmployees() {
         return new ArrayList<>(employees);
     }
 
+    /**
+     * Adds a new employee to the mock data.
+     * 
+     * @param employee the Employee object to be added
+     * @return always true for mock data operations
+     * @author harry
+     */
     public boolean addEmployee(Employee employee) {
         employee.setEmployeeID(nextEmployeeId++);
         employees.add(employee);
         return true;
     }
 
+    /**
+     * Updates an existing employee in mock data.
+     * 
+     * @param employee the Employee object with updated information
+     * @return true if employee was found and updated, false otherwise
+     * @author harry
+     */
     public boolean updateEmployee(Employee employee) {
         for (int i = 0; i < employees.size(); i++) {
             if (employees.get(i).getEmployeeID() == employee.getEmployeeID()) {
@@ -206,14 +306,33 @@ public class MockDataProvider {
         return false;
     }
 
+    /**
+     * Deletes an employee from mock data.
+     * 
+     * @param employeeId the ID of the employee to delete
+     * @return true if employee was found and deleted, false otherwise
+     * @author harry
+     */
     public boolean deleteEmployee(int employeeId) {
         return employees.removeIf(emp -> emp.getEmployeeID() == employeeId);
     }
 
+    /**
+     * Retrieves all mock orders.
+     * 
+     * @return List of Order objects containing all mock orders
+     * @author harry
+     */
     public List<Order> getAllOrders() {
         return new ArrayList<>(orders);
     }
 
+    /**
+     * Retrieves product usage data for charts and analytics.
+     * 
+     * @return Map with product names as keys and usage counts as values
+     * @author harry
+     */
     public Map<String, Integer> getProductUsageData() {
         Map<String, Integer> usage = new HashMap<>();
 
@@ -237,6 +356,14 @@ public class MockDataProvider {
         return usage;
     }
 
+    /**
+     * Calculates total sales for a given date range using mock data.
+     * 
+     * @param startDate the start date for sales calculation
+     * @param endDate the end date for sales calculation
+     * @return total sales amount for the specified date range
+     * @author harry
+     */
     public double getTotalSales(java.sql.Date startDate, java.sql.Date endDate) {
         double total = 0.0;
 
@@ -251,6 +378,14 @@ public class MockDataProvider {
         return total;
     }
 
+    /**
+     * Creates a new order with associated order items in mock data.
+     * 
+     * @param order the Order object to be created
+     * @param items List of OrderItem objects for the order
+     * @return always true for mock data operations
+     * @author harry
+     */
     public boolean createOrder(Order order, List<OrderItem> items) {
         order.setOrderID(nextOrderId++);
         orders.add(order);
@@ -264,6 +399,13 @@ public class MockDataProvider {
         return true;
     }
 
+    /**
+     * Gets the next available ID for a specified table.
+     * 
+     * @param table the table name to get the next ID for
+     * @return the next available ID for the specified table
+     * @author harry
+     */
     public int getNextId(String table) {
         switch (table.toLowerCase()) {
             case "menuitems":
@@ -281,6 +423,12 @@ public class MockDataProvider {
         }
     }
     
+    /**
+     * Gets the current week number of the year.
+     * 
+     * @return the current week number
+     * @author harry
+     */
     private int getCurrentWeek() {
         Calendar cal = Calendar.getInstance();
         return cal.get(Calendar.WEEK_OF_YEAR);
