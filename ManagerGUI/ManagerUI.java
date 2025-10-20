@@ -3,130 +3,157 @@ import java.awt.*;
 import java.sql.*;
 
 /**
- * ManagerUI provides the interface for managers to handle operations
- * Modular design with improved organization and cleaner UI
+ * Manager UI for managing menu, inventory, employees, and reports.
+ * <p>
+ * Provides a tabbed Swing interface backed by {@link DatabaseManager} and
+ * helper actions to view and update business data. Runs with either mock or
+ * live database data depending on configuration.
  */
 public class ManagerUI extends JFrame {
-  // Services
-  private DatabaseManager dbManager;
 
-  // UI Components
-  private JTextArea menuDisplayArea;
-  private JTextArea inventoryDisplayArea;
-  private JTextArea employeeDisplayArea;
-  private JTextArea reportsDisplayArea;
+    // Services
+    private DatabaseManager dbManager;
 
-  public ManagerUI() {
-      initializeServices();
-      createAndShowGUI();
-  }
+    // UI Components
+    private JTextArea menuDisplayArea;
+    private JTextArea inventoryDisplayArea;
+    private JTextArea employeeDisplayArea;
+    private JTextArea reportsDisplayArea;
 
-  private void initializeServices() {
-      try {
-          dbManager = new DatabaseManager();
-          if (dbManager.isUsingMockData()) {
-              System.out.println("Manager UI: Using mock data mode");
-          }
-      } catch (Exception e) {
-          JOptionPane.showMessageDialog(null,
-                  "Failed to initialize database: " + e.getMessage(),
-                  "Database Error",
-                  JOptionPane.ERROR_MESSAGE);
-          System.exit(1);
-      }
-  }
+    /**
+     * Constructs the manager UI and initializes services and components.
+     */
+    public ManagerUI() {
+        initializeServices();
+        createAndShowGUI();
+    }
 
-  private void createAndShowGUI() {
-      setTitle("Boba Shop Manager System");
-      setSize(1200, 800);
-      setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-      setLocationRelativeTo(null);
+    /**
+     * Initializes data services and validates database connectivity or mock mode.
+     * Shows an error dialog and exits on failure.
+     */
+    private void initializeServices() {
+        try {
+            dbManager = new DatabaseManager();
+            if (dbManager.isUsingMockData()) {
+                System.out.println("Manager UI: Using mock data mode");
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null,
+                    "Failed to initialize database: " + e.getMessage(),
+                    "Database Error",
+                    JOptionPane.ERROR_MESSAGE);
+            System.exit(1);
+        }
+    }
 
-      // Main panel
-      JPanel mainPanel = new JPanel(new BorderLayout());
-      mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+    /**
+     * Creates and shows the main window with tabs and status area.
+     */
+    private void createAndShowGUI() {
+        setTitle("Boba Shop Manager System");
+        setSize(1200, 800);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setLocationRelativeTo(null);
 
-      // Header panel
-      JPanel headerPanel = createHeaderPanel();
-      mainPanel.add(headerPanel, BorderLayout.NORTH);
+        // Main panel
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-      // Create tabbed pane
-      JTabbedPane tabbedPane = new JTabbedPane();
-      tabbedPane.setFont(new Font("Arial", Font.PLAIN, 14));
+        // Header panel
+        JPanel headerPanel = createHeaderPanel();
+        mainPanel.add(headerPanel, BorderLayout.NORTH);
 
-      // Add tabs
-      tabbedPane.addTab("Menu Management", createMenuManagementTab());
-      tabbedPane.addTab("Inventory Management", createInventoryManagementTab());
-      tabbedPane.addTab("Employee Management", createEmployeeManagementTab());
-      tabbedPane.addTab("Reports & Analytics", createReportsTab());
+        // Create tabbed pane
+        JTabbedPane tabbedPane = new JTabbedPane();
+        tabbedPane.setFont(new Font("Arial", Font.PLAIN, 14));
 
-      mainPanel.add(tabbedPane, BorderLayout.CENTER);
+        // Add tabs
+        tabbedPane.addTab("Menu Management", createMenuManagementTab());
+        tabbedPane.addTab("Inventory Management", createInventoryManagementTab());
+        tabbedPane.addTab("Employee Management", createEmployeeManagementTab());
+        tabbedPane.addTab("Reports & Analytics", createReportsTab());
 
-      // Status panel
-      JPanel statusPanel = createStatusPanel();
-      mainPanel.add(statusPanel, BorderLayout.SOUTH);
+        mainPanel.add(tabbedPane, BorderLayout.CENTER);
 
-      add(mainPanel);
-      setVisible(true);
+        // Status panel
+        JPanel statusPanel = createStatusPanel();
+        mainPanel.add(statusPanel, BorderLayout.SOUTH);
 
-      // Add back to landing page option
-      addWindowListener(new java.awt.event.WindowAdapter() {
-          @Override
-          public void windowClosing(java.awt.event.WindowEvent e) {
-              int option = JOptionPane.showConfirmDialog(
-                      ManagerUI.this,
-                      "Return to main menu?",
-                      "Confirm Exit",
-                      JOptionPane.YES_NO_OPTION);
+        add(mainPanel);
+        setVisible(true);
 
-              if (option == JOptionPane.YES_OPTION) {
-                  cleanup();
-                  new LandingPage();
-                  dispose();
-              } else {
-                  setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-              }
-          }
-      });
-  }
+        // Add back to landing page option
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent e) {
+                int option = JOptionPane.showConfirmDialog(
+                        ManagerUI.this,
+                        "Return to main menu?",
+                        "Confirm Exit",
+                        JOptionPane.YES_NO_OPTION);
 
-  private JPanel createHeaderPanel() {
-    JPanel headerPanel = new JPanel(new BorderLayout());
-    headerPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
+                if (option == JOptionPane.YES_OPTION) {
+                    cleanup();
+                    new LandingPage();
+                    dispose();
+                } else {
+                    setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+                }
+            }
+        });
+    }
 
-    JLabel titleLabel = new JLabel("Manager Dashboard");
-    titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
-    titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
+    /**
+     * Builds the header with title and back button.
+     * @return configured header panel
+     */
+    private JPanel createHeaderPanel() {
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
 
-    JButton backButton = new JButton("← Back to Menu");
-    backButton.addActionListener(e -> {
-        cleanup();
-        new LandingPage();
-        dispose();
-    });
+        JLabel titleLabel = new JLabel("Manager Dashboard");
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
-    headerPanel.add(backButton, BorderLayout.WEST);
-    headerPanel.add(titleLabel, BorderLayout.CENTER);
+        JButton backButton = new JButton("← Back to Menu");
+        backButton.addActionListener(e -> {
+            cleanup();
+            new LandingPage();
+            dispose();
+        });
 
-    return headerPanel;
-  }
-  private JPanel createStatusPanel() {
-    JPanel statusPanel = new JPanel(new BorderLayout());
-    statusPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
+        headerPanel.add(backButton, BorderLayout.WEST);
+        headerPanel.add(titleLabel, BorderLayout.CENTER);
 
-    String statusText = dbManager.isUsingMockData() ? "Status: Running in demo mode (mock data)"
-            : "Status: Connected to database";
+        return headerPanel;
+    }
 
-    JLabel statusLabel = new JLabel(statusText);
-    statusLabel.setFont(new Font("Arial", Font.ITALIC, 12));
-    statusLabel.setForeground(dbManager.isUsingMockData() ? Color.ORANGE : Color.BLACK);
+    /**
+     * Builds the status panel indicating mock or live DB mode.
+     * @return configured status panel
+     */
+    private JPanel createStatusPanel() {
+        JPanel statusPanel = new JPanel(new BorderLayout());
+        statusPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
 
-    statusPanel.add(statusLabel, BorderLayout.WEST);
+        String statusText = dbManager.isUsingMockData() ? "Status: Running in demo mode (mock data)"
+                : "Status: Connected to database";
 
-    return statusPanel;
-  }
+        JLabel statusLabel = new JLabel(statusText);
+        statusLabel.setFont(new Font("Arial", Font.ITALIC, 12));
+        statusLabel.setForeground(dbManager.isUsingMockData() ? Color.ORANGE : Color.BLACK);
 
-  private JPanel createMenuManagementTab() {
+        statusPanel.add(statusLabel, BorderLayout.WEST);
+
+        return statusPanel;
+    }
+
+    /**
+     * Builds the Menu Management tab UI.
+     * @return menu management panel
+     */
+    private JPanel createMenuManagementTab() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
@@ -170,6 +197,11 @@ public class ManagerUI extends JFrame {
 
         return panel;
     }
+
+    /**
+     * Builds the Inventory Management tab UI.
+     * @return inventory management panel
+     */
     private JPanel createInventoryManagementTab() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
@@ -210,6 +242,10 @@ public class ManagerUI extends JFrame {
         return panel;
     }
 
+    /**
+     * Builds the Employee Management tab UI.
+     * @return employee management panel
+     */
     private JPanel createEmployeeManagementTab() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
@@ -254,6 +290,11 @@ public class ManagerUI extends JFrame {
 
         return panel;
     }
+
+    /**
+     * Builds the Reports & Analytics tab UI.
+     * @return reports panel
+     */
     private JPanel createReportsTab() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
@@ -300,7 +341,12 @@ public class ManagerUI extends JFrame {
         return panel;
     }
 
-
+    /**
+     * Creates a styled JButton with tooltip.
+     * @param text button label
+     * @param tooltip tooltip text
+     * @return styled button
+     */
     private JButton createStyledButton(String text, String tooltip) {
         JButton button = new JButton(text);
         button.setFont(new Font("Arial", Font.PLAIN, 12));
@@ -309,12 +355,25 @@ public class ManagerUI extends JFrame {
         button.setBorder(BorderFactory.createRaisedBevelBorder());
         return button;
     }
-     private JButton createReportButton(String text, Runnable action) {
+
+    /**
+     * Creates a report button wired to a runnable action.
+     * @param text button label
+     * @param action action to run on click
+     * @return configured button
+     */
+    private JButton createReportButton(String text, Runnable action) {
         JButton button = createStyledButton(text, "Generate " + text + " report");
         button.addActionListener(e -> action.run());
         return button;
     }
 
+    /**
+     * Shows a standard initial message in a text area.
+     * @param area destination text area
+     * @param title section title
+     * @param description brief description for the section
+     */
     private void showInitialMessage(JTextArea area, String title, String description) {
         area.setText("✓ System initialized successfully\n");
         area.append("=".repeat(60) + "\n\n");
@@ -327,6 +386,9 @@ public class ManagerUI extends JFrame {
     }
 
     // Menu Management Methods
+    /**
+     * Displays all menu items in the menu area.
+     */
     private void viewMenuItems() {
         menuDisplayArea.setText("");
         try {
@@ -350,6 +412,10 @@ public class ManagerUI extends JFrame {
             menuDisplayArea.append("\nERROR: " + e.getMessage() + "\n");
         }
     }
+
+    /**
+     * Prompts for and adds a standard menu item.
+     */
     private void addMenuItem() {
         JPanel panel = new JPanel(new GridLayout(4, 2, 10, 10));
 
@@ -399,6 +465,9 @@ public class ManagerUI extends JFrame {
         }
     }
 
+    /**
+     * Prompts for and updates a menu item's price.
+     */
     private void updateMenuItemPrice() {
         try {
             java.util.List<MenuItem> menuItems = dbManager.getAllMenuItems();
@@ -461,6 +530,9 @@ public class ManagerUI extends JFrame {
         }
     }
 
+    /**
+     * Prompts for and adds a seasonal menu item.
+     */
     private void addSeasonalMenuItem() {
         JPanel panel = new JPanel(new GridLayout(6, 2, 10, 10));
 
@@ -523,6 +595,9 @@ public class ManagerUI extends JFrame {
     }
 
     // Inventory Management Methods
+    /**
+     * Displays all inventory items and quantities.
+     */
     private void viewInventory() {
         inventoryDisplayArea.setText("");
         try {
@@ -546,6 +621,9 @@ public class ManagerUI extends JFrame {
         }
     }
 
+    /**
+     * Prompts for and adds a new inventory item.
+     */
     private void addInventoryItem() {
         JPanel panel = new JPanel(new GridLayout(3, 2, 10, 10));
 
@@ -590,6 +668,9 @@ public class ManagerUI extends JFrame {
         }
     }
 
+    /**
+     * Prompts for and updates an inventory item's quantity.
+     */
     private void updateInventoryQuantity() {
         try {
             java.util.List<Inventory> inventory = dbManager.getAllInventory();
@@ -651,7 +732,11 @@ public class ManagerUI extends JFrame {
             inventoryDisplayArea.append("\nERROR: " + e.getMessage() + "\n");
         }
     }
+
     // Employee Management Methods
+    /**
+     * Displays all employees and their details.
+     */
     private void viewEmployees() {
         employeeDisplayArea.setText("");
         try {
@@ -675,6 +760,10 @@ public class ManagerUI extends JFrame {
             employeeDisplayArea.append("\nERROR: " + e.getMessage() + "\n");
         }
     }
+
+    /**
+     * Prompts for and adds a new employee.
+     */
     private void addEmployee() {
         JPanel panel = new JPanel(new GridLayout(4, 2, 10, 10));
 
@@ -724,7 +813,10 @@ public class ManagerUI extends JFrame {
         }
     }
 
-     private void updateEmployee() {
+    /**
+     * Prompts for and updates an employee's details.
+     */
+    private void updateEmployee() {
         try {
             java.util.List<Employee> employees = dbManager.getAllEmployees();
 
@@ -824,7 +916,11 @@ public class ManagerUI extends JFrame {
             employeeDisplayArea.append("\nERROR: " + e.getMessage() + "\n");
         }
     }
-  private void removeEmployee() {
+
+    /**
+     * Prompts for and removes an employee by ID.
+     */
+    private void removeEmployee() {
         try {
             java.util.List<Employee> employees = dbManager.getAllEmployees();
 
@@ -907,7 +1003,11 @@ public class ManagerUI extends JFrame {
             employeeDisplayArea.append("\nERROR: " + e.getMessage() + "\n");
         }
     }
-  // Report Methods (simplified for Phase 3, will be expanded in Phase 4)
+
+    // Report Methods (simplified for Phase 3, will be expanded in Phase 4)
+    /**
+     * Generates and displays today's sales summary.
+     */
     private void generateSalesTodayReport() {
         reportsDisplayArea.setText("");
         reportsDisplayArea.append("SALES TODAY REPORT\n");
@@ -923,7 +1023,11 @@ public class ManagerUI extends JFrame {
             reportsDisplayArea.append("This feature will be enhanced when database is connected.\n");
         }
     }
-  private void generateTopSellersReport() {
+
+    /**
+     * Generates and displays the top selling items.
+     */
+    private void generateTopSellersReport() {
         reportsDisplayArea.setText("");
         reportsDisplayArea.append("TOP SELLING ITEMS REPORT\n");
         reportsDisplayArea.append("=".repeat(50) + "\n");
@@ -938,7 +1042,11 @@ public class ManagerUI extends JFrame {
             reportsDisplayArea.append("This feature will be enhanced when database is connected.\n");
         }
     }
-  private void generateRevenueReport() {
+
+    /**
+     * Generates and displays revenue totals.
+     */
+    private void generateRevenueReport() {
         reportsDisplayArea.setText("");
         reportsDisplayArea.append("REVENUE REPORT\n");
         reportsDisplayArea.append("=".repeat(50) + "\n");
@@ -952,7 +1060,11 @@ public class ManagerUI extends JFrame {
             reportsDisplayArea.append("This feature will be enhanced when database is connected.\n");
         }
     }
-  private void generateUsageReport() {
+
+    /**
+     * Generates and displays product usage metrics.
+     */
+    private void generateUsageReport() {
         reportsDisplayArea.setText("");
         reportsDisplayArea.append("PRODUCT USAGE CHART\n");
         reportsDisplayArea.append("=".repeat(50) + "\n");
@@ -967,7 +1079,11 @@ public class ManagerUI extends JFrame {
             reportsDisplayArea.append("This feature will be enhanced when database is connected.\n");
         }
     }
-   private void generateLowStockReport() {
+
+    /**
+     * Generates and displays low stock alerts.
+     */
+    private void generateLowStockReport() {
         reportsDisplayArea.setText("");
         reportsDisplayArea.append("LOW STOCK ALERT\n");
         reportsDisplayArea.append("=".repeat(50) + "\n");
@@ -987,7 +1103,11 @@ public class ManagerUI extends JFrame {
             reportsDisplayArea.append("✓ All items are adequately stocked!\n");
         }
     }
-  private void generateInventoryValueReport() {
+
+    /**
+     * Generates and displays an inventory value estimate.
+     */
+    private void generateInventoryValueReport() {
         reportsDisplayArea.setText("");
         reportsDisplayArea.append("INVENTORY VALUE REPORT\n");
         reportsDisplayArea.append("=".repeat(50) + "\n");
@@ -1001,6 +1121,10 @@ public class ManagerUI extends JFrame {
             reportsDisplayArea.append("This feature will be enhanced when database is connected.\n");
         }
     }
+
+    /**
+     * Generates and displays restock recommendations.
+     */
     private void generateRestockReport() {
         reportsDisplayArea.setText("");
         reportsDisplayArea.append("RESTOCK RECOMMENDATIONS\n");
@@ -1015,6 +1139,10 @@ public class ManagerUI extends JFrame {
             reportsDisplayArea.append("This feature will be enhanced when database is connected.\n");
         }
     }
+
+    /**
+     * Generates and displays the hourly X-report.
+     */
     private void generateXReport() {
         reportsDisplayArea.setText("");
         reportsDisplayArea.append("X-REPORT (HOURLY SALES)\n");
@@ -1035,6 +1163,10 @@ public class ManagerUI extends JFrame {
             reportsDisplayArea.append("This feature will be enhanced when database is connected.\n");
         }
     }
+
+    /**
+     * Generates and displays staff hours per employee.
+     */
     private void generateStaffHoursReport() {
         reportsDisplayArea.setText("");
         reportsDisplayArea.append("STAFF HOURS REPORT\n");
@@ -1049,6 +1181,10 @@ public class ManagerUI extends JFrame {
                     employee.getHoursWorked()));
         }
     }
+
+    /**
+     * Generates and displays team performance metrics.
+     */
     private void generatePerformanceReport() {
         reportsDisplayArea.setText("");
         reportsDisplayArea.append("PERFORMANCE REPORT\n");
@@ -1064,6 +1200,10 @@ public class ManagerUI extends JFrame {
             reportsDisplayArea.append("This feature will be enhanced when database is connected.\n");
         }
     }
+
+    /**
+     * Generates and displays the end-of-day Z-report.
+     */
     private void generateZReport() {
         reportsDisplayArea.setText("");
         reportsDisplayArea.append("Z-REPORT (END OF DAY)\n");
@@ -1083,7 +1223,12 @@ public class ManagerUI extends JFrame {
             reportsDisplayArea.append("This feature will be enhanced when database is connected.\n");
         }
     }
-     private void exportCurrentReport() {
+
+    /**
+     * Exports the current report text to a timestamped file.
+     * Shows a dialog indicating success or failure.
+     */
+    private void exportCurrentReport() {
         try {
             String reportContent = reportsDisplayArea.getText();
             if (reportContent.trim().isEmpty()) {
@@ -1113,10 +1258,12 @@ public class ManagerUI extends JFrame {
         }
     }
 
+    /**
+     * Releases resources and closes database connections.
+     */
     public void cleanup() {
         if (dbManager != null) {
             dbManager.closeConnection();
         }
     }
-
 }
