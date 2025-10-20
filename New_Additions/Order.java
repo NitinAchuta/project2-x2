@@ -16,9 +16,6 @@ import java.sql.Timestamp;
  * getter and setter methods, implements standard Object methods for comparison
  * and string representation, and follows JavaBean conventions.
  * 
- * @author CS331 Project Team
- * @version 1.0
- * @since 2025
  */
 public class Order {
     /** The unique identifier for the order in the database */
