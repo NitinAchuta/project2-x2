@@ -18,13 +18,16 @@ import New_Additions.Employee;
  */
 public class ManagerUI extends JFrame {
 
-    // Services
+    /** Database manager for handling all data operations */
     private DatabaseManager dbManager;
 
-    // UI Components
+    /** Text area for displaying menu items and updates */
     private JTextArea menuDisplayArea;
+    /** Text area for displaying inventory items and updates */
     private JTextArea inventoryDisplayArea;
+    /** Text area for displaying employee information and updates */
     private JTextArea employeeDisplayArea;
+    /** Text area for displaying reports and analytics */
     private JTextArea reportsDisplayArea;
 
     /**
