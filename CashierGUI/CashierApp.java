@@ -12,7 +12,12 @@ import java.util.stream.Stream;
 import java.nio.file.*;
 
 /**
- * Main cashier aplication used for handling orders and menu items.
+ * Main cashier application for handling food orders and menu items.
+ * Provides a graphical interface for:
+ * - Displaying available menu items
+ * - Managing customer orders
+ * - Processing transactions
+ * - Tracking order totals
  */
 public class CashierApp {
 
@@ -164,7 +169,14 @@ public class CashierApp {
     }
 
     /**
-     * Submits the order to databse and resets UI.
+     * Submits the current order to database and resets the UI.
+     * Handles the following operations:
+     * - Validates order is not empty
+     * - Creates new order record in database
+     * - Adds all order items to orderitems table
+     * - Uses transaction to ensure data integrity
+     * - Shows confirmation message on success
+     * - Clears the order form after successful submission
      */
     private void submitOrder() {
         if (currentOrder.isEmpty()) {
@@ -213,7 +225,14 @@ public class CashierApp {
     }
 
     /**
-     * Gets the next avaliable ID for a given table.
+     * Gets the next available ID for a given database table.
+     * Calculates by finding the maximum current ID and adding 1.
+     * 
+     * @param conn the database Connection to use
+     * @param table the name of the table to query
+     * @param idColumn the name of the ID column in the table
+     * @return the next available ID number
+     * @throws SQLException if there's an error accessing the database
      */
     private int getNextID(Connection conn, String table, String idColumn) throws SQLException {
         String sql = "SELECT COALESCE(MAX(" + idColumn + "), 0) + 1 FROM " + table;
@@ -226,7 +245,11 @@ public class CashierApp {
     }
 
     /**
-     * Retrives current week number from calender.
+     * Retrieves the current week number from calendar.
+     * Week numbers are based on the default calendar system
+     * and range from 1 to 52/53.
+     * 
+     * @return the current week of year (1-53)
      */
     private int getCurrentWeek() {
         java.util.Calendar cal = java.util.Calendar.getInstance();
@@ -241,7 +264,8 @@ public class CashierApp {
     }
 
     /**
-     * Represents a menu item entitty.
+     * Represents a menu item entity with its ID, name and price.
+     * Used to store and display individual menu items available for ordering.
      */
     static class MenuItem {
         int id;
@@ -257,7 +281,9 @@ public class CashierApp {
     }
 
     /**
-     * Represents a menu item and its quantitty in an order.
+     * Represents an item in a customer's order with its quantity.
+     * Associates a MenuItem with the quantity ordered.
+     * Used to track items in the current order before submission.
      */
     static class OrderItem {
         MenuItem menuItem;
@@ -271,7 +297,12 @@ public class CashierApp {
     }
 
     /**
-     * Loads enviroment file and returns values as a map.
+     * Loads environment variables from a file and returns them as a map.
+     * Skips empty lines and comments (lines starting with #).
+     * Each line should be in the format KEY=VALUE.
+     *
+     * @param filePath path to the environment file
+     * @return Map containing the environment variables
      */
     private static Map<String, String> loadEnvFile(String filePath) {
         Map<String, String> env = new HashMap<>();

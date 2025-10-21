@@ -573,17 +573,6 @@ public class ManagerUI extends JFrame {
     /**
      * Prompts for and adds a seasonal menu item.
      */
-    /**
-     * Displays a dialog to add a new seasonal menu item.
-     * Collects the following information:
-     * - Item name
-     * - Price
-     * - Season/Period (defaults to current season)
-     * - Description
-     * 
-     * The item is automatically categorized as "Seasonal" in the menu system.
-     * Shows success or error feedback in the menu display area.
-     */
     private void addSeasonalMenuItem() {
         JPanel panel = new JPanel(new GridLayout(6, 2, 10, 10));
 
