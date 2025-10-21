@@ -18,9 +18,13 @@ import java.util.stream.Stream;
  */
 public class DatabaseManager {
 
+    /** Flag indicating if database connection is established */
     private boolean isConnected;
+    /** Flag indicating if system is using mock data instead of real database */
     private boolean useMockData;
+    /** Active database connection */
     private Connection connection;
+    /** Provider for mock data when database is unavailable */
     private MockDataProvider mockProvider;
 
     /**
