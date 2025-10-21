@@ -42,9 +42,15 @@ public class LandingPage extends JFrame {
         setResizable(false);
 
         // Main panel with gradient background
+        /**
+         * Anonymous inner class extending JPanel to provide custom gradient background painting.
+         * Creates a smooth transition from steel blue to light steel blue.
+         */
         JPanel mainPanel = new JPanel() {
             /**
              * Custom paint component method to create a gradient background.
+             * Implements smooth gradient from top to bottom using steel blue shades.
+             * Enables anti-aliasing for smoother rendering.
              * 
              * @param g the Graphics object used for painting
              */
