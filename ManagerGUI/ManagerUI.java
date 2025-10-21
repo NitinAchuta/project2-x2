@@ -145,6 +145,16 @@ public class ManagerUI extends JFrame {
      * 
      * @return configured status panel
      */
+    /**
+     * Creates a status panel that displays the current database connection state.
+     * The panel shows whether the system is using mock data or a live database connection.
+     * Visual indicators include:
+     * - Orange text for mock data mode
+     * - Black text for live database connection
+     * - Italic Arial font for status message
+     * 
+     * @return a JPanel containing the status information with consistent styling
+     */
     private JPanel createStatusPanel() {
         JPanel statusPanel = new JPanel(new BorderLayout());
         statusPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
@@ -358,11 +368,11 @@ public class ManagerUI extends JFrame {
     }
 
     /**
-     * Creates a styled JButton with tooltip.
+     * Creates a styled JButton with consistent look and feel.
      * 
-     * @param text    button label
-     * @param tooltip tooltip text
-     * @return styled button
+     * @param text    the text to display on the button
+     * @param tooltip the hover text to show as tooltip
+     * @return a configured JButton with standard styling (Arial font, light blue background, raised border)
      */
     private JButton createStyledButton(String text, String tooltip) {
         JButton button = new JButton(text);
@@ -374,11 +384,13 @@ public class ManagerUI extends JFrame {
     }
 
     /**
-     * Creates a report button wired to a runnable action.
+     * Creates a specialized button for report generation with standard styling.
+     * The button is pre-configured with an action listener that executes the provided
+     * runnable when clicked.
      * 
-     * @param text   button label
-     * @param action action to run on click
-     * @return configured button
+     * @param text   the text to display on the report button
+     * @param action the Runnable to execute when the button is clicked
+     * @return a styled JButton configured for report generation
      */
     private JButton createReportButton(String text, Runnable action) {
         JButton button = createStyledButton(text, "Generate " + text + " report");
@@ -392,6 +404,15 @@ public class ManagerUI extends JFrame {
      * @param area        destination text area
      * @param title       section title
      * @param description brief description for the section
+     */
+    /**
+     * Shows a standardized welcome message in the specified text area.
+     * Formats the message with a success checkmark, section title, description,
+     * and instructions. Also adds a warning if running in demo mode.
+     *
+     * @param area        the JTextArea to display the message in
+     * @param title       the section title to display (will be converted to uppercase)
+     * @param description a brief description of the section's purpose
      */
     private void showInitialMessage(JTextArea area, String title, String description) {
         area.setText("✓ System initialized successfully\n");
@@ -551,6 +572,17 @@ public class ManagerUI extends JFrame {
 
     /**
      * Prompts for and adds a seasonal menu item.
+     */
+    /**
+     * Displays a dialog to add a new seasonal menu item.
+     * Collects the following information:
+     * - Item name
+     * - Price
+     * - Season/Period (defaults to current season)
+     * - Description
+     * 
+     * The item is automatically categorized as "Seasonal" in the menu system.
+     * Shows success or error feedback in the menu display area.
      */
     private void addSeasonalMenuItem() {
         JPanel panel = new JPanel(new GridLayout(6, 2, 10, 10));
@@ -1246,6 +1278,14 @@ public class ManagerUI extends JFrame {
     /**
      * Exports the current report text to a timestamped file.
      * Shows a dialog indicating success or failure.
+     */
+    /**
+     * Exports the currently displayed report to a text file.
+     * The file is saved with a timestamp in the format 'boba_shop_report_YYYY-MM-DD_HH-mm-ss.txt'.
+     * Shows success or error dialogs based on the operation outcome.
+     * 
+     * @throws IOException if there's an error writing the file
+     * @throws SecurityException if there are insufficient permissions to write the file
      */
     private void exportCurrentReport() {
         try {
