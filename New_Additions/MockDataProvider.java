@@ -433,4 +433,31 @@ public class MockDataProvider {
         Calendar cal = Calendar.getInstance();
         return cal.get(Calendar.WEEK_OF_YEAR);
     }
+
+    /**
+     * Validates if there's sufficient inventory for an order in mock data mode.
+     * 
+     * @param orderItems List of OrderItem objects to validate
+     * @return true if sufficient inventory exists, false otherwise
+     * @author harry
+     */
+    public boolean validateInventoryForOrder(List<OrderItem> orderItems) {
+        // In mock mode, always return true for simplicity
+        // In a real implementation, you would check against mock inventory data
+        return true;
+    }
+
+    /**
+     * Updates inventory for an order in mock data mode.
+     * 
+     * @param orderItems List of OrderItem objects from the completed order
+     * @return true if inventory update was successful, false otherwise
+     * @author harry
+     */
+    public boolean updateInventoryForOrder(List<OrderItem> orderItems) {
+        // In mock mode, always return true for simplicity
+        // In a real implementation, you would update mock inventory data
+        System.out.println("Mock: Inventory updated for " + orderItems.size() + " order items");
+        return true;
+    }
 }

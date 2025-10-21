@@ -261,36 +261,58 @@ public class DatabaseManager {
         try {
             connection.setAutoCommit(false);
 
-            // Insert order
-            String orderQuery = "INSERT INTO orders (timeoforder, customerid, employeeid, totalcost, orderweek) VALUES (?, ?, ?, ?, ?) RETURNING orderid";
-            int orderId;
+            // NEW: Validate inventory before processing
+            if (!validateInventoryForOrder(orderItems)) {
+                throw new SQLException("Insufficient inventory for this order");
+            }
+
+            // Get next available order ID
+            int orderId = getNextOrderId();
+            if (orderId == -1) {
+                throw new SQLException("Failed to generate order ID");
+            }
+
+            // Insert order with explicit orderID
+            String orderQuery = "INSERT INTO orders (orderid, timeoforder, customerid, employeeid, totalcost, orderweek) VALUES (?, ?, ?, ?, ?, ?)";
 
             try (PreparedStatement pstmt = connection.prepareStatement(orderQuery)) {
-                pstmt.setTimestamp(1, order.getTimeOfOrder());
-                pstmt.setObject(2, order.getCustomerID());
-                pstmt.setInt(3, order.getEmployeeID());
-                pstmt.setDouble(4, order.getTotalCost());
-                pstmt.setInt(5, order.getOrderWeek());
+                pstmt.setInt(1, orderId);
+                pstmt.setTimestamp(2, order.getTimeOfOrder());
+                pstmt.setObject(3, order.getCustomerID());
+                pstmt.setInt(4, order.getEmployeeID());
+                pstmt.setDouble(5, order.getTotalCost());
+                pstmt.setInt(6, order.getOrderWeek());
 
-                try (ResultSet rs = pstmt.executeQuery()) {
-                    if (rs.next()) {
-                        orderId = rs.getInt(1);
-                    } else {
-                        throw new SQLException("Failed to get order ID");
-                    }
+                int rowsAffected = pstmt.executeUpdate();
+                if (rowsAffected == 0) {
+                    throw new SQLException("Failed to insert order");
                 }
+                
+                // Update the order object with the generated ID
+                order.setOrderID(orderId);
             }
 
             // Insert order items
-            String itemQuery = "INSERT INTO orderitems (orderid, menuitemid, quantity) VALUES (?, ?, ?)";
+            String itemQuery = "INSERT INTO orderitems (orderitemid, orderid, menuitemid, quantity) VALUES (?, ?, ?, ?)";
             try (PreparedStatement pstmt = connection.prepareStatement(itemQuery)) {
                 for (OrderItem item : orderItems) {
-                    pstmt.setInt(1, orderId);
-                    pstmt.setInt(2, item.getMenuItemID());
-                    pstmt.setInt(3, item.getQuantity());
+                    int orderItemId = getNextOrderItemId();
+                    if (orderItemId == -1) {
+                        throw new SQLException("Failed to generate order item ID");
+                    }
+                    
+                    pstmt.setInt(1, orderItemId);
+                    pstmt.setInt(2, orderId);
+                    pstmt.setInt(3, item.getMenuItemID());
+                    pstmt.setInt(4, item.getQuantity());
                     pstmt.addBatch();
                 }
                 pstmt.executeBatch();
+            }
+
+            // NEW: Update inventory after successful order creation
+            if (!updateInventoryForOrder(orderItems)) {
+                throw new SQLException("Failed to update inventory");
             }
 
             connection.commit();
@@ -452,6 +474,52 @@ public class DatabaseManager {
 
         } catch (SQLException e) {
             System.err.println("Error getting next inventory item ID: " + e.getMessage());
+            return -1;
+        }
+    }
+
+    /**
+     * Gets the next available order ID by finding the maximum existing ID and adding 1.
+     * 
+     * @return the next available ID, or -1 if there was an error
+     * @author harry
+     */
+    private int getNextOrderId() {
+        String query = "SELECT COALESCE(MAX(orderid), 0) + 1 FROM orders";
+
+        try (PreparedStatement pstmt = connection.prepareStatement(query);
+                ResultSet rs = pstmt.executeQuery()) {
+
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+            return 1; // If no records exist, start with ID 1
+
+        } catch (SQLException e) {
+            System.err.println("Error getting next order ID: " + e.getMessage());
+            return -1;
+        }
+    }
+
+    /**
+     * Gets the next available order item ID by finding the maximum existing ID and adding 1.
+     * 
+     * @return the next available ID, or -1 if there was an error
+     * @author harry
+     */
+    private int getNextOrderItemId() {
+        String query = "SELECT COALESCE(MAX(orderitemid), 0) + 1 FROM orderitems";
+
+        try (PreparedStatement pstmt = connection.prepareStatement(query);
+                ResultSet rs = pstmt.executeQuery()) {
+
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+            return 1; // If no records exist, start with ID 1
+
+        } catch (SQLException e) {
+            System.err.println("Error getting next order item ID: " + e.getMessage());
             return -1;
         }
     }
@@ -720,5 +788,103 @@ public class DatabaseManager {
         }
 
         return env;
+    }
+
+    /**
+     * Validates if there's sufficient inventory for an order before processing.
+     * 
+     * @param orderItems List of OrderItem objects to validate
+     * @return true if sufficient inventory exists, false otherwise
+     * @author harry
+     */
+    public boolean validateInventoryForOrder(List<OrderItem> orderItems) {
+        if (useMockData) {
+            return mockProvider.validateInventoryForOrder(orderItems);
+        }
+
+        try {
+            for (OrderItem orderItem : orderItems) {
+                // Get all ingredients needed for this menu item
+                String checkQuery = "SELECT i.ingredientID, i.ingredientCount, mi.ingredientQty " +
+                                   "FROM inventory i " +
+                                   "INNER JOIN MenuItemIngredients mi ON i.ingredientID = mi.ingredientID " +
+                                   "WHERE mi.menuItemID = ?";
+                
+                try (PreparedStatement stmt = connection.prepareStatement(checkQuery)) {
+                    stmt.setInt(1, orderItem.getMenuItemID());
+                    
+                    try (ResultSet rs = stmt.executeQuery()) {
+                        while (rs.next()) {
+                            int available = rs.getInt("ingredientCount");
+                            int requiredPerDrink = rs.getInt("ingredientQty");
+                            int totalRequired = requiredPerDrink * orderItem.getQuantity();
+                            
+                            if (available < totalRequired) {
+                                System.err.println("Insufficient inventory for ingredient ID: " + rs.getInt("ingredientID") + 
+                                                 " (Available: " + available + ", Required: " + totalRequired + ")");
+                                return false;
+                            }
+                        }
+                    }
+                }
+            }
+            return true;
+            
+        } catch (SQLException e) {
+            System.err.println("Error validating inventory: " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Updates inventory by decrementing ingredient quantities when an order is placed.
+     * 
+     * @param orderItems List of OrderItem objects from the completed order
+     * @return true if inventory update was successful, false otherwise
+     * @author harry
+     */
+    public boolean updateInventoryForOrder(List<OrderItem> orderItems) {
+        if (useMockData) {
+            return mockProvider.updateInventoryForOrder(orderItems);
+        }
+
+        try {
+            for (OrderItem orderItem : orderItems) {
+                // Get required ingredients for this menu item from MenuItemIngredients table
+                String ingredientQuery = "SELECT ingredientID, ingredientQty FROM MenuItemIngredients WHERE menuItemID = ?";
+                
+                try (PreparedStatement ingredientStmt = connection.prepareStatement(ingredientQuery)) {
+                    ingredientStmt.setInt(1, orderItem.getMenuItemID());
+                    
+                    try (ResultSet rs = ingredientStmt.executeQuery()) {
+                        while (rs.next()) {
+                            int ingredientID = rs.getInt("ingredientID");
+                            int requiredPerDrink = rs.getInt("ingredientQty");
+                            int totalNeeded = requiredPerDrink * orderItem.getQuantity();
+                            
+                            // Update inventory by decrementing
+                            String updateQuery = "UPDATE inventory SET ingredientCount = ingredientCount - ? WHERE ingredientID = ?";
+                            try (PreparedStatement updateStmt = connection.prepareStatement(updateQuery)) {
+                                updateStmt.setInt(1, totalNeeded);
+                                updateStmt.setInt(2, ingredientID);
+                                
+                                int rowsAffected = updateStmt.executeUpdate();
+                                if (rowsAffected == 0) {
+                                    throw new SQLException("Ingredient not found: " + ingredientID);
+                                }
+                                
+                                System.out.println("Updated inventory: Ingredient " + ingredientID + 
+                                                 " decremented by " + totalNeeded);
+                            }
+                        }
+                    }
+                }
+            }
+            return true;
+            
+        } catch (SQLException e) {
+            System.err.println("Error updating inventory: " + e.getMessage());
+            return false;
+        }
     }
 }

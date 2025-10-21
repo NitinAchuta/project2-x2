@@ -317,14 +317,6 @@ public class CashierUI extends JFrame {
         }
 
         try {
-            /** Creates and populate new order object. */
-            Order order = new Order();
-            order.setTimeOfOrder(new Timestamp(System.currentTimeMillis()));
-            order.setCustomerID(null);
-            order.setEmployeeID(1);
-            order.setTotalCost(totalCost);
-            order.setOrderWeek(getCurrentWeek());
-
             /** Converts displayed items to database order items. */
             List<OrderItem> orderItems = new ArrayList<>();
             for (OrderItemDisplay displayItem : currentOrder) {
@@ -333,6 +325,14 @@ public class CashierUI extends JFrame {
                 orderItem.setQuantity(displayItem.getQuantity());
                 orderItems.add(orderItem);
             }
+
+            /** Creates and populate new order object. */
+            Order order = new Order();
+            order.setTimeOfOrder(new Timestamp(System.currentTimeMillis()));
+            order.setCustomerID(null);
+            order.setEmployeeID(1);
+            order.setTotalCost(totalCost);
+            order.setOrderWeek(getCurrentWeek());
 
             /** Sends order to database. */
             boolean success = dbManager.createOrder(order, orderItems);
@@ -346,16 +346,25 @@ public class CashierUI extends JFrame {
                 clearOrder();
             } else {
                 JOptionPane.showMessageDialog(this,
-                        "Failed to submit order",
-                        "Database Error",
+                        "Failed to submit order. Please check inventory levels.",
+                        "Order Error",
                         JOptionPane.ERROR_MESSAGE);
             }
 
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this,
-                    "Failed to submit order: " + e.getMessage(),
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
+            // Check if it's an inventory-related error
+            if (e.getMessage() != null && e.getMessage().contains("Insufficient inventory")) {
+                JOptionPane.showMessageDialog(this,
+                        "Cannot fulfill this order due to insufficient inventory.\n" +
+                        "Please check stock levels and try again.",
+                        "Inventory Error",
+                        JOptionPane.ERROR_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this,
+                        "Failed to submit order: " + e.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
 
